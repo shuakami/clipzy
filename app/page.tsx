@@ -328,18 +328,18 @@ export default function Page() {
                     此内容已被安全解密，仅限当前设备访问
                   </p>
                 </div>
-                <div className="flex space-x-4">
+                {/* Button container - Apply responsive classes */}
+                <div className="flex flex-col space-y-2 items-end mt-4 sm:mt-0 sm:flex-row sm:space-y-0 sm:space-x-4 sm:items-center">
                   <button
                     onClick={() => decryptedContent && copyText(decryptedContent)}
-                    className={`${theme.btnSecondary} flex items-center space-x-2`}
-                  >
+                    className={`${theme.btnSecondary} flex items-center space-x-2 w-full justify-center sm:w-auto`}> {/* Full width on mobile */}
                     {textCopied ? (
                       <span className={theme.success}>已复制</span>
                     ) : (
                       <span>复制全文</span>
                     )}
                   </button>
-                  <button onClick={reset} className={theme.btnSecondary}>
+                  <button onClick={reset} className={`${theme.btnSecondary} w-full justify-center sm:w-auto`}> {/* Full width on mobile */}
                     新建
                   </button>
                 </div>

@@ -2,9 +2,9 @@
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="public/assets/clipzy-white.png">
-    <source media="(prefers-color-scheme: light)" srcset="public/assets/clipzy.png">
-    <img alt="Clipzy Logo Banner" src="public/assets/clipzy.png" width="400">
+    <source media="(prefers-color-scheme: dark)" srcset="public/assets/clipzy-white-r.png">
+    <source media="(prefers-color-scheme: light)" srcset="public/assets/clipzy-r.png">
+    <img alt="Clipzy Logo Banner" src="public/assets/clipzy-r.png" width="400">
   </picture>
 </p>
 
