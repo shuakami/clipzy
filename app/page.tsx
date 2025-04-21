@@ -160,7 +160,6 @@ export default memo(function Page(){
   },[]);
   useEffect(()=>localStorage.setItem(EXP_KEY,String(expiration)),[expiration]);
 
-  // Load syntax highlight style asynchronously
   useEffect(() => {
     let isMounted = true;
     getStyle(dark).then(loadedStyle => {
@@ -168,7 +167,7 @@ export default memo(function Page(){
         setSyntaxStyle(loadedStyle);
       }
     });
-    return () => { isMounted = false; }; // Cleanup
+    return () => { isMounted = false; };
   }, [dark]);
 
   // error helper
@@ -200,38 +199,45 @@ export default memo(function Page(){
   },[isCreating,input,expiration,copyUrl,onErr]);
 
   // 读取解密
-  const readClip=useCallback(async(hash:string)=>{
-    const[id,b64]=hash.split('!');
-    if(!id||!b64)return onErr(new Error('URL 格式错误'));
+  const readClip = useCallback(async (hash: string) => {
+    const [id, b64] = hash.split('!');
+    if (!id || !b64) return onErr(new Error('URL 格式错误'));
     setIsNotFound(false);
+    setError(null);
     abortRef.current?.abort();
-    const c=new AbortController(); abortRef.current=c;
-    try{
+    const c = new AbortController(); abortRef.current = c;
+    try {
       setState(LoadingState.Fetching);
-      const res=await fetch(`/api/get?id=${encodeURIComponent(id)}`,{signal:c.signal});
-      if(!res.ok)throw new Error(await res.text()|| (res.status===404?'内容未找到或已过期':`API Error:${res.status}`));
-      const {compressedData}=await res.json();
+      const res = await fetch(`/api/get?id=${encodeURIComponent(id)}`, { signal: c.signal });
+
+      if (res.status === 404) {
+        setIsNotFound(true);
+        return; 
+      }
+      if (!res.ok) { 
+        throw new Error(await res.text() || `API Error:${res.status}`);
+      }
+
+      const { compressedData } = await res.json();
       setState(LoadingState.Decompressing);
-      const dec=decompressString(compressedData); if(dec===null)throw new Error('解压失败');
+      const dec = decompressString(compressedData);
+      if (dec === null) throw new Error('解压失败');
       setState(LoadingState.Decrypting);
-      const txt=await decryptData(dec,b64);
+      const txt = await decryptData(dec, b64);
       startTransition(() => {
         setDecrypted(txt);
       });
-      if(localKeyRef.current){
-        const localEnc=await encryptData(txt,localKeyRef.current);
-        await saveViewedClip({id,encryptedData:localEnc,timestamp:Date.now()});
+      if (localKeyRef.current) {
+        const localEnc = await encryptData(txt, localKeyRef.current);
+        await saveViewedClip({ id, encryptedData: localEnc, timestamp: Date.now() });
       }
-    }catch(e){
-      const errorMessage = e instanceof Error ? e.message : String(e);
-      if (errorMessage.includes('内容未找到或已过期')) {
-        setIsNotFound(true);
-        setError(null);
-      } else {
-        onErr(e);
-      }
-    }finally{setState(LoadingState.Idle);abortRef.current=null;}
-  },[onErr]);
+    } catch (e) {
+      onErr(e); 
+    } finally {
+      setState(LoadingState.Idle);
+      abortRef.current = null;
+    }
+  }, [onErr]);
 
   // hash 监听
   useEffect(()=>{
@@ -388,7 +394,6 @@ export default memo(function Page(){
             </motion.div>
           )}
 
-          {/* --- Not Found View Start --- */}
           {!isReading && isNotFound && (
             <motion.div
               key="notfound"
@@ -398,18 +403,16 @@ export default memo(function Page(){
               transition={{ duration: 0.2 }}
               className="flex-1 flex flex-col items-center justify-center text-center space-y-6"
             >
-              {/* Optional Icon */}
-              <div className="text-6xl opacity-50">🤷</div>
+              <div className="text-6xl opacity-50">🌵</div>
               <h2 className={`${theme.textPrimary} text-2xl font-light`}>无法找到内容</h2>
-              <p className={`${theme.textSecondary} max-w-xs`}>
-                您尝试访问的链接可能已过期、被删除或输入错误。
+              <p className={`${theme.textSecondary} max-w-xl`}>
+                您尝试访问的链接可能已过期、被删除。
               </p>
               <button onClick={reset} className={`${theme.btnPrimary} px-6 py-2`}>
                 创建新剪贴
               </button>
             </motion.div>
           )}
-          {/* --- Not Found View End --- */}
         </AnimatePresence>
       </main>
 
