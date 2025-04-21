@@ -1,7 +1,7 @@
 // app/page.tsx
 'use client';
 
-import { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback, Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { atomOneDark, atomOneLight } from 'react-syntax-highlighter/dist/esm/styles/hljs';
@@ -501,8 +501,3 @@ export default function Page() {
     </div>
   );
 }
-
-// eslint-disable-next-line react-refresh/only-export-components
-export const _md = {
-  default: lazy(() => import('react-markdown').then(mod => ({ default: mod.default })))
-};
