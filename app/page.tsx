@@ -1,7 +1,7 @@
 // app/page.tsx
 'use client';
 
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { atomOneDark, atomOneLight } from 'react-syntax-highlighter/dist/esm/styles/hljs';
@@ -18,6 +18,23 @@ import Footer from '../components/Footer';
 const SyntaxHighlighter = dynamic(
   () => import('react-syntax-highlighter').then(mod => mod.Light),
   { ssr: false }
+);
+
+// Markdown 渲染组件——仅在真正需要时加载
+const MarkdownRenderer = dynamic(
+  () =>
+    import('./_md').then(async ({ default: ReactMarkdown }) => {
+      const { default: remarkGfm } = await import('remark-gfm');
+      // 包一层让 remarkPlugins 固定，减少多次 new
+      return (props: { children: string; dark: boolean }) => (
+        <div
+          className={`prose ${props.dark ? 'prose-invert' : ''} max-w-none p-4 text-sm`}
+        >
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{props.children}</ReactMarkdown>
+        </div>
+      );
+    }),
+  { ssr: false, loading: () => <div className="p-4 text-sm">加载 Markdown…</div> }
 );
 
 /* ------------------------------------------------------------------ */
@@ -41,7 +58,6 @@ const LOADING_MESSAGES: Record<Exclude<LoadingState, LoadingState.Idle>, string>
   [LoadingState.Decrypting]: '解密内容中…'
 };
 
-// 按用途快速判断
 const CREATING_STATES = new Set<LoadingState>([
   LoadingState.Encrypting,
   LoadingState.Uploading
@@ -57,10 +73,12 @@ const READING_STATES = new Set<LoadingState>([
 /* ------------------------------------------------------------------ */
 
 const detectLanguage = (txt: string): string => {
-  if (!txt.includes('{') && !txt.includes('<')) return 'plaintext';
+  if (/(^|\n)\s*```/.test(txt)) return 'markdown';
+  if (/(^|\n)#\s/.test(txt) || /\[.*\]\(.*\)/.test(txt)) return 'markdown';
   if (txt.includes('<') && txt.includes('>')) return 'xml';
+  if (txt.includes('{') || txt.includes('}')) return 'json';
   if (txt.includes('function') || txt.includes('=>')) return 'javascript';
-  return 'json';
+  return 'plaintext';
 };
 
 /* ------------------------------------------------------------------ */
@@ -69,15 +87,13 @@ const detectLanguage = (txt: string): string => {
 
 function usePrefersDarkMode() {
   const [dark, setDark] = useState(false);
-
   useEffect(() => {
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
     setDark(mq.matches);
-    const onChange = (e: MediaQueryListEvent) => setDark(e.matches);
-    mq.addEventListener('change', onChange);
-    return () => mq.removeEventListener('change', onChange);
+    const fn = (e: MediaQueryListEvent) => setDark(e.matches);
+    mq.addEventListener('change', fn);
+    return () => mq.removeEventListener('change', fn);
   }, []);
-
   return [dark, setDark] as const;
 }
 
@@ -106,13 +122,9 @@ function useClipboard(timeout = 2000) {
   const [copied, setCopied] = useState(false);
   const copy = useCallback(
     async (text: string) => {
-      try {
-        await navigator.clipboard.writeText(text);
-        setCopied(true);
-        setTimeout(() => setCopied(false), timeout);
-      } catch {
-        throw new Error('复制失败');
-      }
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), timeout);
     },
     [timeout]
   );
@@ -124,7 +136,6 @@ function useClipboard(timeout = 2000) {
 /* ------------------------------------------------------------------ */
 
 export default function Page() {
-  /* ---------------- state ---------------- */
   const [inputValue, setInputValue] = useState('');
   const [shareUrl, setShareUrl] = useState('');
   const [loadingState, setLoadingState] = useState<LoadingState>(LoadingState.Idle);
@@ -137,17 +148,15 @@ export default function Page() {
   const [darkMode, setDarkMode] = usePrefersDarkMode();
   const theme = useTheme(darkMode);
 
-  // 使用 Set.has 的常量时间复杂度判断
   const isCreating = CREATING_STATES.has(loadingState);
   const isReading = READING_STATES.has(loadingState);
 
-  /* ---------------- 工具函数 ---------------- */
-  const abortRef = useRef<AbortController | null>(null); // 控制并发请求
+  const abortRef = useRef<AbortController | null>(null);
 
   const handleError = (err: unknown) =>
     setError(`失败: ${err instanceof Error ? err.message : String(err)}`);
 
-  /* ---------------- 操作：加密并上传 ---------------- */
+  /* ---------------- 加密 & 上传 ---------------- */
   const handleEncryptAndUpload = async () => {
     if (isCreating || !inputValue) return;
 
@@ -168,7 +177,6 @@ export default function Page() {
       });
 
       if (!res.ok) throw new Error((await res.text().catch(() => '')) || `API Error:${res.status}`);
-
       const { id } = await res.json();
       if (!id) throw new Error('No ID returned');
 
@@ -182,25 +190,23 @@ export default function Page() {
     }
   };
 
-  /* ---------------- 操作：读取 & 解密 ---------------- */
-  const fetchAndDecrypt = useCallback(
-    async (hash: string) => {
-      const [id, base64Key] = hash.split('!');
-      if (!id || !base64Key) throw new Error('URL 格式错误');
+  /* ---------------- 读取 & 解密 ---------------- */
+  const fetchAndDecrypt = useCallback(async (hash: string) => {
+    const [id, base64Key] = hash.split('!');
+    if (!id || !base64Key) throw new Error('URL 格式错误');
 
-      // 中断上一请求
-      abortRef.current?.abort();
-      abortRef.current = new AbortController();
-      const { signal } = abortRef.current;
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
 
+    try {
       setLoadingState(LoadingState.Fetching);
-      const res = await fetch(`/api/get?id=${encodeURIComponent(id)}`, { signal });
+      const res = await fetch(`/api/get?id=${encodeURIComponent(id)}`, {
+        signal: controller.signal
+      });
       if (!res.ok) {
         const txt = await res.text().catch(() => '');
-        throw new Error(
-          txt ||
-            (res.status === 404 ? '内容未找到或已过期' : `API Error:${res.status}`)
-        );
+        throw new Error(txt || (res.status === 404 ? '内容未找到或已过期' : `API Error:${res.status}`));
       }
 
       const { compressedData } = await res.json();
@@ -213,43 +219,39 @@ export default function Page() {
       setLoadingState(LoadingState.Decrypting);
       const decrypted = await decryptData(decompressed, base64Key);
       setDecryptedContent(decrypted);
-    },
-    []
-  );
+    } finally {
+      setLoadingState(LoadingState.Idle);
+      abortRef.current = null;
+    }
+  }, []);
 
-  // hash 变化监听
+  /* ---------------- 监听 hash ---------------- */
   useEffect(() => {
     const processHash = async () => {
       const hash = location.hash.slice(1);
-      if (!hash.includes('!')) return; // 无密钥 hash，忽略
-
-      // 重置状态
+      if (!hash.includes('!')) return;
       setShareUrl('');
       setInputValue('');
       setError(null);
       setDecryptedContent(null);
-
       try {
         await fetchAndDecrypt(hash);
       } catch (e) {
         handleError(e);
-      } finally {
-        setLoadingState(LoadingState.Idle);
       }
     };
-
     processHash();
-    window.addEventListener('hashchange', processHash);
-    return () => window.removeEventListener('hashchange', processHash);
+    addEventListener('hashchange', processHash);
+    return () => removeEventListener('hashchange', processHash);
   }, [fetchAndDecrypt]);
 
-  /* ---------------- 根据解密内容自动识别语言 ---------------- */
+  /* ---------------- 自动语言识别 ---------------- */
   const detectedLanguage = useMemo(
     () => (decryptedContent ? detectLanguage(decryptedContent) : 'plaintext'),
     [decryptedContent]
   );
 
-  /* ---------------- 其余交互 ---------------- */
+  /* ---------------- 重置 ---------------- */
   const reset = () => {
     setInputValue('');
     setShareUrl('');
@@ -265,7 +267,7 @@ export default function Page() {
 
   return (
     <div className={`flex flex-col min-h-screen ${theme.bg}`}>
-      {/* ------------- header ------------- */}
+      {/* header */}
       <header className="px-8 py-6 flex justify-between items-center">
         <Image
           src={darkMode ? '/assets/clipzy-white.png' : '/assets/clipzy.png'}
@@ -275,18 +277,13 @@ export default function Page() {
           className="cursor-pointer"
           onClick={reset}
         />
-        <button
-          onClick={() => setDarkMode(d => !d)}
-          className={theme.btnSecondary}
-          aria-label="toggle-theme"
-        >
+        <button onClick={() => setDarkMode(d => !d)} className={theme.btnSecondary} aria-label="主题">
           {darkMode ? '☀️' : '🌙'}
         </button>
       </header>
 
-      {/* ------------- main ------------- */}
+      {/* main */}
       <main className="flex-1 flex flex-col px-8 pt-6 pb-12 max-w-4xl mx-auto w-full">
-        {/* 加载、输入、分享、已解密 四种主视图 */}
         <AnimatePresence mode="wait">
           {/* 加载态 */}
           {isReading && (
@@ -309,7 +306,7 @@ export default function Page() {
             </motion.div>
           )}
 
-          {/* 已解密视图 */}
+          {/* 解密成功 */}
           {!isReading && decryptedContent && (
             <motion.div
               key="decrypted"
@@ -321,49 +318,47 @@ export default function Page() {
             >
               <div className="flex justify-between items-start mb-8">
                 <div className="max-w-3xl">
-                  <h2 className={`${theme.textPrimary} text-4xl font-extralight mb-3`}>
-                    已解密内容
-                  </h2>
-                  <p className={`${theme.textSecondary} text-base`}>
-                    此内容已被安全解密，仅限当前设备访问
-                  </p>
+                  <h2 className={`${theme.textPrimary} text-4xl font-extralight mb-3`}>已解密内容</h2>
+                  <p className={`${theme.textSecondary} text-base`}>此内容已被安全解密，仅限当前设备访问</p>
                 </div>
-                {/* Button container - Apply responsive classes */}
+
+                {/* 操作按钮 */}
                 <div className="flex flex-col space-y-2 items-end mt-4 sm:mt-0 sm:flex-row sm:space-y-0 sm:space-x-4 sm:items-center">
                   <button
-                    onClick={() => decryptedContent && copyText(decryptedContent)}
-                    className={`${theme.btnSecondary} flex items-center space-x-2 w-full justify-center sm:w-auto`}> {/* Full width on mobile */}
-                    {textCopied ? (
-                      <span className={theme.success}>已复制</span>
-                    ) : (
-                      <span>复制全文</span>
-                    )}
+                    onClick={() => copyText(decryptedContent)}
+                    className={`${theme.btnSecondary} flex items-center justify-center space-x-2 w-full sm:w-auto`}
+                  >
+                    {textCopied ? <span className={theme.success}>已复制</span> : <span>复制全文</span>}
                   </button>
-                  <button onClick={reset} className={`${theme.btnSecondary} w-full justify-center sm:w-auto`}> {/* Full width on mobile */}
+                  <button onClick={reset} className={`${theme.btnSecondary} w-full sm:w-auto`}>
                     新建
                   </button>
                 </div>
               </div>
 
-              <div
-                className={`flex-1 border ${theme.border} rounded-md overflow-hidden ${theme.inputBg}`}
-              >
-                <SyntaxHighlighter
-                  language={detectedLanguage}
-                  style={darkMode ? atomOneDark : atomOneLight}
-                  customStyle={{
-                    margin: 0,
-                    padding: '1rem',
-                    background: 'transparent',
-                    fontSize: '0.875rem',
-                    lineHeight: '1.5'
-                  }}
-                  showLineNumbers={detectedLanguage !== 'plaintext'}
-                  wrapLines
-                  wrapLongLines
-                >
-                  {decryptedContent}
-                </SyntaxHighlighter>
+              <div className={`flex-1 border ${theme.border} rounded-md overflow-hidden ${theme.inputBg}`}>
+                {detectedLanguage === 'markdown' ? (
+                  <Suspense fallback={<div className="p-4 text-sm">渲染 Markdown…</div>}>
+                    <MarkdownRenderer dark={darkMode}>{decryptedContent}</MarkdownRenderer>
+                  </Suspense>
+                ) : (
+                  <SyntaxHighlighter
+                    language={detectedLanguage === 'plaintext' ? 'text' : detectedLanguage}
+                    style={darkMode ? atomOneDark : atomOneLight}
+                    customStyle={{
+                      margin: 0,
+                      padding: '1rem',
+                      background: 'transparent',
+                      fontSize: '0.875rem',
+                      lineHeight: '1.5'
+                    }}
+                    showLineNumbers={detectedLanguage !== 'plaintext'}
+                    wrapLines
+                    wrapLongLines
+                  >
+                    {decryptedContent}
+                  </SyntaxHighlighter>
+                )}
               </div>
             </motion.div>
           )}
@@ -380,12 +375,9 @@ export default function Page() {
             >
               <div className="mb-8 max-w-3xl">
                 <h2 className={`${theme.textPrimary} text-4xl font-extralight mb-3`}>新建分享</h2>
-                <p className={`${theme.textSecondary} text-base`}>
-                  输入的文本将被端到端加密，仅限链接持有者查看
-                </p>
+                <p className={`${theme.textSecondary} text-base`}>输入的文本将被端到端加密，仅限链接持有者查看</p>
               </div>
 
-              {/* textarea */}
               <div className="flex flex-col flex-1">
                 <div className="flex items-center justify-between mb-2 h-6">
                   <label className={`${theme.textSecondary} text-sm`}>输入文本</label>
@@ -413,7 +405,6 @@ export default function Page() {
                 />
               </div>
 
-              {/* 错误提示 */}
               {error && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
@@ -425,7 +416,6 @@ export default function Page() {
                 </motion.div>
               )}
 
-              {/* 创建按钮 */}
               <motion.div
                 className="mt-6 flex justify-end"
                 initial={false}
@@ -477,19 +467,13 @@ export default function Page() {
               className="flex flex-col flex-1"
             >
               <div className="mb-8 max-w-3xl">
-                <h2 className={`${theme.textPrimary} text-4xl font-extralight mb-3`}>
-                  链接已创建
-                </h2>
-                <p className={`${theme.textSecondary} text-base`}>
-                  已自动复制到剪贴板，此链接包含解密密钥，有效期为 1 小时
-                </p>
+                <h2 className={`${theme.textPrimary} text-4xl font-extralight mb-3`}>链接已创建</h2>
+                <p className={`${theme.textSecondary} text-base`}>已自动复制到剪贴板，此链接包含解密密钥，有效期为 1 小时</p>
               </div>
 
               <div className="mb-8">
                 <label className={`${theme.textSecondary} text-sm mb-2 block`}>分享链接</label>
-                <div
-                  className={`flex items-center border ${theme.border} rounded-md overflow-hidden ${theme.inputBg}`}
-                >
+                <div className={`flex items-center border ${theme.border} rounded-md overflow-hidden ${theme.inputBg}`}>
                   <input
                     readOnly
                     value={shareUrl}
@@ -498,19 +482,14 @@ export default function Page() {
                   />
                   <button
                     onClick={() => copyUrl(shareUrl)}
-                    className={`px-4 py-3 ${
-                      urlCopied ? theme.success : theme.btnSecondary
-                    } border-l ${theme.border} transition-colors duration-200`}
+                    className={`px-4 py-3 ${urlCopied ? theme.success : theme.btnSecondary} border-l ${theme.border} transition-colors duration-200`}
                   >
                     {urlCopied ? '已复制' : '复制'}
                   </button>
                 </div>
               </div>
 
-              <button
-                onClick={reset}
-                className={`${theme.btnPrimary} px-6 py-2 transition-all duration-200 hover:shadow-sm`}
-              >
+              <button onClick={reset} className={`${theme.btnPrimary} px-6 py-2 transition-all duration-200 hover:shadow-sm`}>
                 创建新剪贴
               </button>
             </motion.div>
@@ -518,8 +497,12 @@ export default function Page() {
         </AnimatePresence>
       </main>
 
-      {/* Use the Footer component */}
       <Footer />
     </div>
   );
 }
+
+// eslint-disable-next-line react-refresh/only-export-components
+export const _md = {
+  default: lazy(() => import('react-markdown').then(mod => ({ default: mod.default })))
+};

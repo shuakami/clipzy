@@ -28,7 +28,7 @@ export default function Footer() {
           className="hidden dark:block" 
         />
       </div>
-      <div className={`${theme.textSecondary} text-xs flex flex-col space-y-3 mx-1.5`}>
+      <div className={`${theme.textSecondary} text-xs flex flex-col space-y-3 mx-1`}>
         <p>End‑to‑end encrypted text sharing tool. © {new Date().getFullYear()} Clipzy.</p>
         <div className="flex items-center space-x-3">
           <Link href="/docs" className={`${theme.textSecondary} hover:underline`}>
