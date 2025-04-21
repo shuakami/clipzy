@@ -72,6 +72,41 @@ export default function PrivacyPage() {
         {/* Separator */}
         <hr className={`${theme.border} my-8`} />
 
+        {/* Raw 功能说明 */}
+        <div className="max-w-prose space-y-3">
+          <h2 className="text-xl font-semibold mb-3">Raw 功能（服务器端解密）</h2>
+          <p className={`${theme.textSecondary} leading-relaxed`}>
+            我们提供了一个可选的 "Raw" 功能 (<code className="px-1.5 py-0.5 bg-zinc-100 dark:bg-zinc-800/60 rounded text-sm font-mono mx-0.5">/api/raw/...</code>)，它允许直接获取纯文本内容。使用此功能时，您需要将解密密钥作为查询参数附加到 URL 中并发送给我们的服务器。
+          </p>
+          <p className={`${theme.textSecondary} ${theme.errorText} leading-relaxed`}>
+            <strong>请注意：</strong>此操作意味着解密过程发生在服务器上。虽然我们<strong>保证不存储</strong>解密后的原始文本内容，但在此过程中，您的密钥和解密后的内容理论上对服务器是可见的。这与标准的端到端加密流程不同，请仅在理解并接受相关风险的情况下使用此功能。
+          </p>
+           <ul className={`list-disc list-outside pl-5 mt-2 space-y-1.5 text-sm ${theme.textSecondary}`}>
+             <li className="leading-relaxed">原始的加密数据仍然遵循上述的临时存储策略（默认1小时，最多1天）。</li>
+           </ul>
+        </div>
+
+        {/* Separator */}
+        <hr className={`${theme.border} my-8`} />
+
+        {/* 本地历史记录说明 */}
+        <div className="max-w-prose space-y-3">
+          <h2 className="text-xl font-semibold mb-3">本地历史记录</h2>
+          <p className={`${theme.textSecondary} leading-relaxed`}>
+            Clipzy 提供了一个可选的"查看历史"功能，允许您查看您通过本浏览器访问过的 Clipzy 链接记录。
+          </p>
+          <ul className={`list-disc list-outside pl-5 mt-2 space-y-1.5 text-sm ${theme.textSecondary}`}>
+            <li className="leading-relaxed">此历史记录是<strong>完全存储在您自己的浏览器本地存储 (IndexedDB)</strong> 中的。</li>
+            <li className="leading-relaxed">为了保护隐私，存储在历史记录中的数据是使用一个<strong>独立的本地密钥</strong>进行再次加密的。</li>
+            <li className="leading-relaxed">这个本地密钥本身存储在您浏览器的 `localStorage` 中，并且<strong>永远不会发送到我们的服务器</strong>。</li>
+            <li className="leading-relaxed">因此，我们<strong>无法访问</strong>您的本地浏览历史记录或用于解密它的本地密钥。</li>
+            <li className="leading-relaxed">您可以随时在"查看历史"页面手动删除单个条目，或者通过清除浏览器缓存和站点数据来完全删除所有历史记录和本地密钥。</li>
+          </ul>
+        </div>
+
+        {/* Separator */}
+        <hr className={`${theme.border} my-8`} />
+
         <div className="max-w-prose space-y-3">
           <h2 className="text-xl font-semibold mb-3">服务器日志</h2>
           <p className={`${theme.textSecondary} leading-relaxed`}>
@@ -99,7 +134,7 @@ export default function PrivacyPage() {
         <div className="max-w-prose space-y-3">
           <h2 className="text-xl font-semibold mb-3">政策变更</h2>
           <p className={`${theme.textSecondary} leading-relaxed`}>
-            我们可能会不时更新本隐私政策。任何更改都将在此页面上发布，并会更新顶部的“最后更新日期”。我们建议您定期查看以了解最新信息。
+            我们可能会不时更新本隐私政策。任何更改都将在此页面上发布，并会更新顶部的"最后更新日期"。我们建议您定期查看以了解最新信息。
           </p>
         </div>
 

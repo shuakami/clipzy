@@ -153,6 +153,61 @@ export default function DocsPage() {
           </CodeBlock>
         </section>
 
+        {/* GET /api/raw/{id} */}
+        <section className="mb-12">
+          <h3 className="text-xl font-semibold mb-3">获取原始文本 (服务器端解密)</h3>
+          {/* 安全警告 */}
+          <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700/50 text-red-700 dark:text-red-300 px-4 py-3 rounded relative mb-6" role="alert">
+            <strong className="font-bold">安全警告：</strong>
+            <span className="block sm:inline ml-1">此端点在服务器端解密数据。<br/>
+            虽然我们保证<strong>不存储</strong>解密后的原始文本内容，但只要使用了此端点，您的数据将不再属于端到端加密。建议谨慎使用。链接有效期与原片段相同。</span>
+          </div>
+          <div className="space-y-3 mb-5">
+            <p>
+              <span className="font-mono font-semibold bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-0.5 rounded mr-2">GET</span>
+              <code className={inlineCodeStyle}>/api/raw/{'{id}'}</code>
+            </p>
+            <p className={`${theme.textSecondary} leading-relaxed max-w-prose`}>
+              根据 ID 和密钥获取解密后的原始文本内容。数据在服务器端解密后直接以 <code className={inlineCodeStyle}>text/plain</code> 格式返回。
+            </p>
+          </div>
+
+          <h4 className="text-lg font-medium mt-8 mb-1">路径参数</h4>
+          <ul className="list-disc pl-5 text-sm space-y-1.5">
+            <li><code className={inlineCodeStyle}>{'{id}'}</code> (必需)：片段唯一 ID。</li>
+          </ul>
+
+          <h4 className="text-lg font-medium mt-8 mb-1">查询参数</h4>
+          <ul className="list-disc pl-5 text-sm space-y-1.5">
+            <li><code className={inlineCodeStyle}>key=string</code> (必需)：用于解密的 Base64 编码的 AES 密钥。</li>
+          </ul>
+          <p className="text-sm mt-2 leading-relaxed">示例：<code className={inlineCodeStyle}>/api/raw/your_unique_id?key=your_base64_key</code></p>
+
+
+          <h4 className="text-lg font-medium mt-8 mb-1">响应 (200 OK)</h4>
+          <p className="text-sm mt-2 leading-relaxed mb-2">
+            <code className={inlineCodeStyle}>Content-Type: text/plain; charset=utf-8</code>
+          </p>
+          <CodeBlock language="text">
+{`解密后的纯文本内容...`}
+          </CodeBlock>
+
+          <h4 className="text-lg font-medium mt-8 mb-1">错误响应</h4>
+          <ul className="list-disc pl-5 text-sm space-y-1.5 mb-2">
+            <li><code className={inlineCodeStyle}>400 Bad Request</code>: 缺少或无效的 ID 或密钥。</li>
+            <li><code className={inlineCodeStyle}>403 Forbidden</code>: 提供的密钥无法解密数据。</li>
+            <li><code className={inlineCodeStyle}>404 Not Found</code>: 片段不存在或已过期。</li>
+            <li><code className={inlineCodeStyle}>405 Method Not Allowed</code>: 非 GET 方法。</li>
+            <li><code className={inlineCodeStyle}>500 Internal Server Error</code>: 服务器错误（例如解密失败）。</li>
+          </ul>
+           <CodeBlock language="json">
+{`{
+  "error": "string",    // 错误信息
+  "details"?: "string" // 可选：详细说明
+}`}
+          </CodeBlock>
+        </section>
+
         {/* 客户端工作流程 */}
         <div className="mb-10">
           <h2 className="text-2xl font-extralight mt-8 mb-6">客户端工作流程</h2>
