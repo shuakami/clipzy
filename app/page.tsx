@@ -160,6 +160,17 @@ export default function Page() {
   const handleEncryptAndUpload = async () => {
     if (isCreating || !inputValue) return;
 
+    // 新增：检查输入大小是否超过 5MB
+    const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5.00 MB
+    const inputSizeBytes = new TextEncoder().encode(inputValue).length;
+
+    if (inputSizeBytes > MAX_SIZE_BYTES) {
+      setError(
+        `输入内容过大 (${(inputSizeBytes / (1024 * 1024)).toFixed(2)} MB)，请确保不超过 5.00 MB。`
+      );
+      return; // 阻止继续执行
+    }
+
     setError(null);
     setLoadingState(LoadingState.Encrypting);
 

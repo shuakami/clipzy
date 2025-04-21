@@ -100,6 +100,7 @@ export default function DocsPage() {
           <h4 className="text-lg font-medium mt-8 mb-1">错误响应</h4>
           <ul className="list-disc pl-5 text-sm space-y-1.5 mb-2">
             <li><code className={inlineCodeStyle}>400 Bad Request</code>: 请求体缺失或格式错误。</li>
+            <li><code className={inlineCodeStyle}>413 Payload Too Large</code>: 请求体（压缩后数据）超过 5.5MB 限制。</li>
             <li><code className={inlineCodeStyle}>405 Method Not Allowed</code>: 非 POST 方法。</li>
             <li><code className={inlineCodeStyle}>500 Internal Server Error</code>: 服务器错误。</li>
           </ul>

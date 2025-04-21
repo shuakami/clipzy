@@ -30,6 +30,19 @@ export async function POST(req: NextRequest) {
     return json({ error: 'Invalid JSON body' }, 400);
   }
 
+  // 服务器端检查压缩后数据大小
+  const MAX_COMPRESSED_SIZE_BYTES = 5.5 * 1024 * 1024; // 5.5 MB
+  const compressedSizeBytes = Buffer.byteLength(compressedData, 'utf8'); // 使用 Buffer.byteLength 获取字节数
+
+  if (compressedSizeBytes > MAX_COMPRESSED_SIZE_BYTES) {
+    return json(
+      {
+        error: `Payload too large. Received ${(compressedSizeBytes / (1024 * 1024)).toFixed(2)} MB, limit is 5.50 MB.`
+      },
+      413 // 413 Payload Too Large
+    );
+  }
+
   // 动态 import，只有第一次写入时才加载 nanoid
   const { nanoid } = await import('nanoid');
   const id = nanoid(10);

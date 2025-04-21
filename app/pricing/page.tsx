@@ -38,7 +38,7 @@ export default function PricingPage() {
         <div className="mb-10">
            <h2 className="text-2xl font-extralight mb-4">完全免费</h2>
            <p className={`${theme.textPrimary} leading-relaxed max-w-prose`}>
-             本服务的所有核心功能，包括创建和查看加密文本片段，都是 **完全免费** 的。我们希望为用户提供一个无负担的私密分享工具。
+             本服务的所有核心功能，包括创建和查看加密文本片段，都是 <strong>完全免费</strong> 的。我们希望为用户提供一个无负担的私密分享工具。
            </p>
         </div>
 
