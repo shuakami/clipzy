@@ -42,6 +42,10 @@ export default function Footer() {
           <Link href="/privacy" className={`${theme.textSecondary} hover:underline`}>
             Privacy
           </Link>
+          <span>/</span>
+          <Link href="/history" className={`${theme.textSecondary} hover:underline`}>
+            History
+          </Link>
         </div>
       </div>
     </footer>

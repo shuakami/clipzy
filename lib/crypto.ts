@@ -34,6 +34,23 @@ export async function generateKey(): Promise<{ key: CryptoKey; base64Key: string
   return { key, base64Key };
 }
 
+/**
+ * 从 Base64 字符串导入 CryptoKey
+ * @param base64Key Base64 格式的原始密钥
+ * @param keyUsages 允许的密钥用途，例如 ['encrypt', 'decrypt']
+ * @returns Promise<CryptoKey>
+ */
+export async function getKeyFromBase64(base64Key: string, keyUsages: KeyUsage[]): Promise<CryptoKey> {
+  const keyBuf = base64ToBuffer(base64Key);
+  return crypto.subtle.importKey(
+    'raw',      // 导入原始字节
+    keyBuf,     // 包含密钥字节的 ArrayBuffer
+    { name: ALGO }, // 指定算法 (与生成时一致)
+    true,       // 是否可导出 (通常设为 true)
+    keyUsages   // 允许的密钥用途
+  );
+}
+
 /** 加密 */
 export async function encryptData(plain: string, key: CryptoKey): Promise<string> {
   const data = encoder.encode(plain);
@@ -50,14 +67,26 @@ export async function decryptData(
   cipherBase64: string,
   base64Key: string
 ): Promise<string> {
-  const keyBuf = base64ToBuffer(base64Key);
-  const key = await crypto.subtle.importKey(
-    'raw',
-    keyBuf,
-    ALGO,
-    true,
-    ['decrypt']
+  // 复用新函数来导入密钥
+  const key = await getKeyFromBase64(base64Key, ['decrypt']);
+  const combined = new Uint8Array(base64ToBuffer(cipherBase64));
+  const iv = combined.subarray(0, IV_LENGTH);
+  const data = combined.subarray(IV_LENGTH);
+  const decrypted = await crypto.subtle.decrypt(
+    { name: ALGO, iv },
+    key,
+    data
   );
+  return decoder.decode(decrypted);
+}
+
+/**
+ * 解密 (使用已导入的 CryptoKey 对象)
+ * @param cipherBase64 Base64 编码的密文 (包含 IV)
+ * @param key 用于解密的 CryptoKey 对象
+ * @returns Promise<string>
+ */
+export async function decryptDataWithKey(cipherBase64: string, key: CryptoKey): Promise<string> {
   const combined = new Uint8Array(base64ToBuffer(cipherBase64));
   const iv = combined.subarray(0, IV_LENGTH);
   const data = combined.subarray(IV_LENGTH);
