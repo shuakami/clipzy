@@ -406,7 +406,7 @@ export default memo(function Page(){
               <div className="text-6xl opacity-50">🌵</div>
               <h2 className={`${theme.textPrimary} text-2xl font-light`}>无法找到内容</h2>
               <p className={`${theme.textSecondary} max-w-xl`}>
-                您尝试访问的链接可能已过期、被删除。
+                您尝试访问的链接可能已过期或者被删除。
               </p>
               <button onClick={reset} className={`${theme.btnPrimary} px-6 py-2`}>
                 创建新剪贴
