@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import {
   upstashFetch,
   UpstashNotFoundError,
@@ -9,11 +9,18 @@ interface UpstashGetResponse {
   result: string | null;
 }
 
+// Define an interface for the context parameter
+interface ApiContext {
+  params: {
+    id: string;
+  }
+}
+
 export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  const { id } = params;
+  request: NextRequest,
+  context: ApiContext // Use the defined interface
+): Promise<NextResponse | Response> { // Add explicit return type
+  const { id } = context.params;
   const { searchParams } = new URL(request.url);
   const base64Key = searchParams.get('key');
 
