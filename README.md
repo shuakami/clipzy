@@ -1,70 +1,74 @@
 # Clipzy 📎
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](https://opensource.org/licenses/MIT)
-[![Status](https://img.shields.io/badge/status-active-success.svg?style=flat-square)](https://github.com/YOUR_USERNAME/clipzy) 
+<p align="center">
+  <img src="/public/assets/clipzy-white.png" alt="Clipzy Logo Banner" width="400"/>
+</p>
 
-A simple, end-to-end encrypted text sharing tool built with Next.js and Upstash Redis.
+<p align="center">
+  <a href="https://www.gnu.org/licenses/gpl-3.0" target="_blank">
+    <img alt="License: GPL v3" src="https://img.shields.io/badge/License-GPLv3-blue.svg?style=flat-square">
+  </a>
+  <a href="https://github.com/shuakami/clipzy" target="_blank">
+    <img alt="Status" src="https://img.shields.io/badge/status-active-success.svg?style=flat-square">
+  </a>
+  <a href="README_EN.md" target="_blank">
+    <img alt="Read in English" src="https://img.shields.io/badge/Read-English-orange?style=flat-square">
+  </a>
+</p>
 
-一个简单的、使用 Next.js 和 Upstash Redis 构建的端到端加密文本分享工具。
+<p align="center">
+  一个简洁、安全的端到端加密 (E2EE) 文本分享工具。
+  <br />
+  基于 Next.js (App Router) 和 Upstash Redis 构建。
+</p>
 
-## ✨ Features / 特性
+---
 
-*   **End-to-End Encryption (E2EE)**: Text is encrypted/decrypted entirely in the browser. The server never sees the raw content or the decryption key.
-    *   **端到端加密 (E2EE)**：文本内容完全在浏览器端进行加密和解密，服务器无法获取原始内容或密钥。
-*   **Temporary Storage**: Shared text snippets expire automatically (default 1 hour, max 1 day).
-    *   **临时存储**：分享的文本片段会自动过期（默认1小时，最长1天）。
-*   **Compression**: Encrypted data is compressed using LZString before storing to save space.
-    *   **压缩**：加密后的数据在存储前会使用 LZString 进行压缩以节省空间。
-*   **Simple UI**: Clean and minimalist interface with dark mode support.
-    *   **简洁界面**：干净、极简的用户界面，支持暗色模式。
-*   **API Available**: Provides `/api/store` and `/api/get` endpoints (see `/docs` page for details).
-    *   **提供 API**：提供 `/api/store` 和 `/api/get` 接口（详见 `/docs` 页面）。
+## ✨ 主要特性
 
-## 🛠️ Tech Stack / 技术栈
+*   **端到端加密 (E2EE)**：文本在浏览器中完成加密与解密，服务器无法获取原始内容或密钥。
+*   **临时存储**：文本片段默认 1 小时后自动过期（最长可设为 1 天）。
+*   **数据压缩**：使用 LZString 压缩加密数据，节省存储空间。
+*   **简洁界面**：清爽、直观的用户界面，并支持暗色模式。
+*   **API 支持**：提供 `/api/store` 和 `/api/get` 接口，方便集成（详见 `/docs`）。
 
-*   **Framework**: Next.js (App Router)
-*   **Styling**: Tailwind CSS
-*   **Encryption**: Web Crypto API (AES-GCM)
-*   **Compression**: LZString
-*   **Storage**: Upstash Redis (via REST API)
-*   **UI Components**: Framer Motion (for animations), React Syntax Highlighter
+## 🛠️ 技术栈
 
-## 🚀 Getting Started / 本地运行
+*   **框架**: Next.js (App Router)
+*   **样式**: Tailwind CSS
+*   **加密**: Web Crypto API (AES-GCM)
+*   **压缩**: LZString
+*   **存储**: Upstash Redis (通过 REST API)
+*   **UI**: Framer Motion (动画), React Syntax Highlighter (代码高亮)
 
-1.  **Clone the repository:**
+## 🚀 本地运行
+
+1.  **克隆仓库**
     ```bash
     git clone https://github.com/shuakami/clipzy.git
     cd clipzy
     ```
-2.  **Install dependencies:**
+2.  **安装依赖**
     ```bash
     npm install
-    # or
-    yarn install
-    # or
-    pnpm install
+    # 或 yarn install / pnpm install
     ```
-3.  **Set up Upstash Redis:**
-    *   Create a free Redis database on [Upstash](https://upstash.com/).
-    *   Get your REST URL and REST Token.
-    *   Create a `.env.local` file in the project root and add your credentials:
+3.  **配置 Upstash Redis**
+    *   在 [Upstash](https://upstash.com/) 创建一个免费的 Redis 数据库。
+    *   获取数据库的 REST URL 和 REST Token。
+    *   在项目根目录创建 `.env.local` 文件，并填入凭证：
         ```dotenv
         UPSTASH_REDIS_REST_URL="YOUR_UPSTASH_REDIS_URL"
         UPSTASH_REDIS_REST_TOKEN="YOUR_UPSTASH_REDIS_TOKEN"
         ```
-4.  **Run the development server:**
+4.  **启动开发服务器**
     ```bash
     npm run dev
-    # or
-    yarn dev
-    # or
-    pnpm dev
+    # 或 yarn dev / pnpm dev
     ```
-5.  Open [http://localhost:3000](http://localhost:3000) in your browser.
+5.  浏览器访问 `http://localhost:3000`
 
-## 📄 License / 许可证
+## 📄 许可证
 
-This project is licensed under the GNU General Public License v3.0 (GPL-3.0). See the [LICENSE](LICENSE) file for details.
-
-本项目采用 GNU 通用公共许可证第 3 版（GPL-3.0）授权。详见 [LICENSE](LICENSE) 文件。
+本项目采用 [GNU 通用公共许可证 v3.0 (GPL-3.0)](https://www.gnu.org/licenses/gpl-3.0) 授权。
 
