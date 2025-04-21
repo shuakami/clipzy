@@ -9,6 +9,7 @@ import { getKeyFromBase64, decryptDataWithKey } from '../../lib/crypto';
 import { getViewedClips, deleteViewedClip, type ViewedClip } from '../../lib/indexeddb';
 import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomOneDark, atomOneLight } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+import Footer from '@/components/Footer';
 
 // 动态加载 Markdown 渲染器，SSR 禁用
 const MarkdownRenderer = dynamic(
@@ -338,17 +339,7 @@ function HistoryPage() {
       </main>
 
       {/* Footer */}
-      <footer className="px-8 py-6 flex items-center">
-        <Image
-          src={darkMode ? '/assets/clipzy-white.png' : '/assets/clipzy.png'}
-          width={24}
-          height={24}
-          alt="Logo"
-        />
-        <span className={`${theme.textSecondary} text-xs ml-2`}>
-          © {new Date().getFullYear()} Clipzy.
-        </span>
-      </footer>
+      <Footer />
     </div>
   );
 }
