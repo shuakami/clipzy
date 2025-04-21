@@ -64,8 +64,8 @@ export default function PrivacyPage() {
           </p>
            <ul className={`list-disc list-outside pl-5 mt-2 space-y-1.5 text-sm ${theme.textSecondary}`}>
              <li className="leading-relaxed">存储的数据是加密的，我们以及 Upstash 都<strong>没有密钥</strong>来解密它。</li>
-             <li className="leading-relaxed">这些数据是<strong>临时性</strong>的。默认情况下，它们会在 1 小时后自动从服务器删除。用户可以选择最长 1 天（86400 秒）的留存时间，超过此时间的数据也会被自动删除。</li>
-             <li className="leading-relaxed">我们仅存储这些加密数据以使其能够通过链接被检索，一旦过期或被检索（取决于具体策略，但终将删除），它们将不再可用。</li>
+             <li className="leading-relaxed">这些数据是<strong>临时性</strong>的（除非您选择永久）。默认情况下，它们会在 1 小时后自动从服务器删除。用户可以选择其他留存时间（最长约 30 天）或选择永久存储。</li>
+             <li className="leading-relaxed">我们仅存储这些加密数据以使其能够通过链接被检索，一旦过期（如果设置了过期时间），它们将不再可用。</li>
           </ul>
         </div>
 
@@ -82,7 +82,7 @@ export default function PrivacyPage() {
             <strong>请注意：</strong>此操作意味着解密过程发生在服务器上。虽然我们<strong>保证不存储</strong>解密后的原始文本内容，但在此过程中，您的密钥和解密后的内容理论上对服务器是可见的。这与标准的端到端加密流程不同，请仅在理解并接受相关风险的情况下使用此功能。
           </p>
            <ul className={`list-disc list-outside pl-5 mt-2 space-y-1.5 text-sm ${theme.textSecondary}`}>
-             <li className="leading-relaxed">原始的加密数据仍然遵循上述的临时存储策略（默认1小时，最多1天）。</li>
+             <li className="leading-relaxed">原始的加密数据仍然遵循上述的存储策略（您可以选择永久存储或设置最长约 30 天的过期时间）。</li>
            </ul>
         </div>
 
@@ -126,6 +126,46 @@ export default function PrivacyPage() {
           <p className={`${theme.textSecondary} leading-relaxed`}>
             我们使用 Upstash (Redis) 作为临时存储加密数据的服务提供商。Upstash 有其自己的隐私政策，但如前所述，我们发送给 Upstash 的数据是加密的，他们无法访问您的原始内容。
           </p>
+        </div>
+
+        {/* Separator */}
+        <hr className={`${theme.border} my-8`} />
+
+        <div className="max-w-prose space-y-3">
+          <h2 className="text-xl font-semibold mb-3">我们如何保障您的安全？</h2>
+          <p className={`${theme.textSecondary} leading-relaxed`}>
+            Clipzy 的设计将您的隐私和安全放在首位。我们通过以下方式实现：
+          </p>
+          <ul className={`list-disc list-outside pl-5 mt-2 space-y-2 text-sm ${theme.textSecondary}`}>
+            <li className="leading-relaxed">
+              <strong>端到端加密是核心：</strong>
+              您的原始文本内容在您的浏览器中使用业界推荐的 <strong>AES-256-GCM</strong> 算法进行加密。每次加密都会生成一个随机且唯一的初始化向量 (IV)，确保即使相同内容多次加密，结果也不同。加密后的密文与 IV 会一起存储，但解密密钥从未发送给我们。这意味着即使是我们或存储提供商，也无法读取您分享的内容。
+            </li>
+            <li className="leading-relaxed">
+              <strong>密钥从不离开您的链接：</strong>
+              解密所需的密钥仅作为 URL 的一部分（# 号后面的片段）存在。根据 Web 标准，URL 片段（hash fragment）不会被浏览器发送到服务器。因此，密钥始终掌握在链接持有者手中，从未传输给我们。
+            </li>
+            <li className="leading-relaxed">
+              <strong>最小化数据收集：</strong>
+              我们不要求、也不存储任何可以直接识别您个人身份的信息，如姓名、邮箱等。
+            </li>
+            <li className="leading-relaxed">
+              <strong>自动过期删除：</strong>
+              您存储的加密数据具有生命周期。除非您选择永久，否则它们会在您设定的时间（默认1小时，最长约30天）后自动从服务器删除。
+            </li>
+            <li className="leading-relaxed">
+              <strong>开源与透明：</strong>
+              Clipzy 的核心代码是完全开源的，您可以在 GitHub 上查看所有源代码：
+              <a href="https://github.com/shuakami/clipzy" target="_blank" rel="noopener noreferrer" className={`ml-1 font-medium ${theme.link}`}>
+                github.com/shuakami/clipzy
+              </a>。
+              这意味着任何人都可以审查我们的代码，验证我们的安全承诺，并确保不存在任何隐藏的后门或数据收集行为。这种透明度是您信任我们的基础。
+            </li>
+            <li className="leading-relaxed">
+              <strong>可靠的技术栈：</strong>
+              我们依赖 Vercel 和 Upstash 等行业内成熟、声誉良好的服务商来部署和运行服务。
+            </li>
+          </ul>
         </div>
 
         {/* Separator */}

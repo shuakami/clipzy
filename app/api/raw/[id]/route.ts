@@ -9,7 +9,6 @@ interface UpstashGetResponse {
   result: string | null;
 }
 
-// Define an interface for the context parameter
 interface ApiContext {
   params: {
     id: string;
@@ -18,8 +17,8 @@ interface ApiContext {
 
 export async function GET(
   request: NextRequest,
-  context: ApiContext // Use the defined interface
-): Promise<NextResponse | Response> { // Add explicit return type
+  context: ApiContext
+): Promise<NextResponse | Response> {
   const { id } = context.params;
   const { searchParams } = new URL(request.url);
   const base64Key = searchParams.get('key');
@@ -90,17 +89,14 @@ export async function GET(
   }
 }
 
-// 添加 OPTIONS 方法以支持 CORS（如果需要跨域访问）
+// 添加 OPTIONS 方法以支持 CORS
 export async function OPTIONS() {
   return new Response(null, {
     status: 204,
     headers: {
-      'Access-Control-Allow-Origin': '*', // 或者更具体的源
+      'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
     },
   });
 }
-
-// 设置运行时环境（如果需要）
-// export const runtime = 'edge'; // Edge 运行时可能不支持某些 Node.js API，需要测试 crypto 是否兼容 

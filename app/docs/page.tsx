@@ -53,9 +53,22 @@ export default function DocsPage() {
             <li><strong>基础 URL:</strong> 相对于当前域名。</li>
             <li><strong>认证:</strong> 无需认证，安全性依赖链接片段中的密钥。</li>
             <li><strong>数据格式:</strong> 请求和响应均为 JSON (<code className={inlineCodeStyle}>application/json</code>)。</li>
-            <li><strong>数据留存:</strong>
+            <li><strong>数据留存与大小限制:</strong>
               <ul className="list-disc pl-5 mt-2 space-y-1.5">
-                <li>默认 1 小时后删除，可通过 <code className={inlineCodeStyle}>ttl</code> 参数设置，最大 86400 秒。</li>
+                <li>默认 1 小时 (<code className={inlineCodeStyle}>ttl=3600</code>) 后删除。</li>
+                <li>可通过 <code className={inlineCodeStyle}>ttl</code> 参数自定义：
+                  <ul className="list-disc pl-8 mt-1 space-y-1">
+                    <li>正数：指定留存秒数（服务器端最大限制约 30 天）。</li>
+                    <li><code className={inlineCodeStyle}>-1</code>：永久存储（无过期时间）。</li>
+                  </ul>
+                </li>
+                <li>大小限制:
+                  <ul className="list-disc pl-8 mt-1 space-y-1">
+                    <li>永久或超过 7 天：约 17 万字符上限。</li>
+                    <li>7 天及以内：约 70 万字符上限。</li>
+                    <li>(注意：服务器端基于压缩后数据有对应限制，分别为 ~0.6MB 和 ~2MB)</li>
+                  </ul>
+                </li>
               </ul>
             </li>
             <li><strong>加密:</strong> 客户端 AES-GCM 加密，密钥仅在 URL 片段中。</li>
@@ -86,7 +99,7 @@ export default function DocsPage() {
           <CodeBlock language="json">
 {`{
   "compressedData": "string", // 必需：加密并 LZString 压缩后的 Base64 字符串
-  "ttl": number | null       // 可选：秒，最大 86400，默认 3600
+  "ttl": number | null       // 可选：秒。正数秒数 (最大约30天), -1 为永久, 默认 3600
 }`}
           </CodeBlock>
 
@@ -100,7 +113,12 @@ export default function DocsPage() {
           <h4 className="text-lg font-medium mt-8 mb-1">错误响应</h4>
           <ul className="list-disc pl-5 text-sm space-y-1.5 mb-2">
             <li><code className={inlineCodeStyle}>400 Bad Request</code>: 请求体缺失或格式错误。</li>
-            <li><code className={inlineCodeStyle}>413 Payload Too Large</code>: 请求体（压缩后数据）超过 5.5MB 限制。</li>
+            <li><code className={inlineCodeStyle}>413 Payload Too Large</code>: 请求体（压缩后数据）超过限制。
+              <ul className="list-disc pl-5 mt-1 space-y-0.5">
+                <li>若 TTL 为永久或 &gt; 7天: 限制约 0.6MB。</li>
+                <li>若 TTL &lt;= 7天: 限制为 2MB。</li>
+              </ul>
+            </li>
             <li><code className={inlineCodeStyle}>405 Method Not Allowed</code>: 非 POST 方法。</li>
             <li><code className={inlineCodeStyle}>500 Internal Server Error</code>: 服务器错误。</li>
           </ul>
