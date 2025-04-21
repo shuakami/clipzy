@@ -16,17 +16,17 @@ function openClipzyDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-    request.onerror = (event) => {
+    request.onerror = (_event) => {
       console.error('IndexedDB error:', request.error);
       reject(`IndexedDB error: ${request.error}`);
     };
 
-    request.onsuccess = (event) => {
+    request.onsuccess = (_event) => {
       resolve(request.result);
     };
 
     // 仅在版本升级或首次创建时触发
-    request.onupgradeneeded = (event) => {
+    request.onupgradeneeded = (_event) => {
       const db = request.result;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         // 创建对象存储，使用 id 作为主键
