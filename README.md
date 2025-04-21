@@ -1,7 +1,11 @@
 # Clipzy 📎
 
 <p align="center">
-  <img src="/public/assets/clipzy-white.png" alt="Clipzy Logo Banner" width="400"/>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="public/assets/clipzy-white.png">
+    <source media="(prefers-color-scheme: light)" srcset="public/assets/clipzy.png">
+    <img alt="Clipzy Logo Banner" src="public/assets/clipzy.png" width="400">
+  </picture>
 </p>
 
 <p align="center">
