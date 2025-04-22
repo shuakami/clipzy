@@ -1,13 +1,12 @@
 // app/api/store/route.ts
 import { type NextRequest } from 'next/server';
-import { upstashFetch, json } from '../_utils/upstash';
+import {
+  upstashFetch, json, isLocalMode,
+  localRedisSet
+} from '../_utils/upstash';
 
 const DEFAULT_TTL_SECONDS = 60 * 60; // 1 小时
 const MAX_NON_PERMANENT_TTL_SECONDS = 60 * 60 * 24 * 30; // 非永久 TTL 的最大值（30 天）
-
-interface UpstashSetResponse {
-  result: 'OK';
-}
 
 export async function POST(req: NextRequest) {
   let compressedData: string | undefined;
@@ -69,32 +68,39 @@ export async function POST(req: NextRequest) {
 
   const { nanoid } = await import('nanoid');
   const id = nanoid(10);
+  const useLocalRedis = isLocalMode(); // 检查模式
 
   try {
-    // 构建 Upstash 请求
-    let upstashEndpoint = `set/${id}`; // 基础命令
-    const fetchOptions: RequestInit = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(compressedData) // 将压缩数据作为 JSON 字符串存储
-    };
-
-    // 仅当 ttlSeconds 是正数时添加 EX 参数
-    if (ttlSeconds !== null && ttlSeconds > 0) {
-      upstashEndpoint += `?EX=${ttlSeconds}`;
+    let result: 'OK';
+    if (useLocalRedis) {
+      // 本地模式：调用 localRedisSet
+      result = await localRedisSet(id, JSON.stringify(compressedData!), ttlSeconds);
+    } else {
+      // Upstash 模式：调用 upstashFetch (需要保留 URL 中的 TTL)
+      let upstashEndpoint = `set/${id}`; 
+      // 仅当 ttlSeconds 是正数时添加 EX 参数 (Upstash REST API 方式)
+      if (ttlSeconds !== null && ttlSeconds > 0) {
+        upstashEndpoint += `?EX=${ttlSeconds}`;
+      }
+      const fetchOptions: RequestInit = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(compressedData!) // Upstash 需要 JSON 字符串化的数据
+      };
+      const upstashResponse = await upstashFetch<{ result: 'OK' }>(
+        upstashEndpoint,
+        fetchOptions
+      );
+      result = upstashResponse.result;
     }
-
-    const { result } = await upstashFetch<UpstashSetResponse>(
-      upstashEndpoint,
-      fetchOptions
-    );
 
     if (result !== 'OK') {
-      throw new Error(`未预期的 Upstash 结果: ${result}`);
+      throw new Error(`存储数据失败，未预期的结果: ${result}`);
     }
     return json({ id });
+
   } catch (e) {
     console.error('POST 路由错误:', e);
-    return json({ error: '存储数据失败' }, 500);
+    return json({ error: `存储数据失败: ${e instanceof Error ? e.message : String(e)}` }, 500);
   }
 }

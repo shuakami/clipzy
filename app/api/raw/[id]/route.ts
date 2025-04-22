@@ -1,13 +1,12 @@
 import { NextResponse, NextRequest } from 'next/server';
 import {
   upstashFetch,
-  UpstashNotFoundError,
+  isLocalMode,
+  localRedisGet,
+  NotFoundError,
+  UpstashNotFoundError
 } from '../../_utils/upstash';
 import { decompressString, decryptData } from '@/lib/crypto';
-
-interface UpstashGetResponse {
-  result: string | null;
-}
 
 interface ApiContext {
   params: {
@@ -24,50 +23,65 @@ export async function GET(
   const base64Key = searchParams.get('key');
 
   if (!id) {
-    return NextResponse.json({ error: 'Missing ID parameter' }, { status: 400 });
+    return new Response('Missing ID parameter', { status: 400, headers: { 'Content-Type': 'text/plain' } });
   }
   if (!base64Key) {
-    return NextResponse.json({ error: 'Missing key parameter' }, { status: 400 });
+    return new Response('Missing key parameter', { status: 400, headers: { 'Content-Type': 'text/plain' } });
   }
 
+  const useLocalRedis = isLocalMode();
+
   try {
-    // 1. 使用 upstashFetch 从 Upstash 获取数据，并使用本地定义的类型
-    const { result } = await upstashFetch<UpstashGetResponse>(`get/${id}`);
-
-    if (result === null) {
-      throw new UpstashNotFoundError();
-    }
-
-    // Upstash 将 value 当作 JSON 字符串存储，这里需要反序列化
-    let compressedData: string;
-    try {
-      const parsedResult = JSON.parse(result);
-      if (typeof parsedResult !== 'string') {
-        throw new Error('Parsed data is not a string');
+    // 1. 根据模式获取压缩数据
+    let compressedDataResult: string | null;
+    if (useLocalRedis) {
+      compressedDataResult = await localRedisGet(id);
+      if (compressedDataResult === null) {
+        throw new NotFoundError(`Data not found in local Redis for ID: ${id}`);
       }
-      compressedData = parsedResult;
-    } catch (e) {
-      console.error(`Malformed data in storage for ID: ${id}`, e);
-      return new Response(`Malformed data in storage - ${e instanceof Error ? e.message : String(e)}`, { status: 500, headers: { 'Content-Type': 'text/plain' } });
+    } else {
+      const { result } = await upstashFetch<{ result: string | null }>(`get/${id}`);
+      if (result === null) {
+        throw new UpstashNotFoundError();
+      }
+      compressedDataResult = result;
     }
 
-    // 2. 解压缩
-    const decompressed = decompressString(compressedData);
+    // 2. 处理获取到的数据 (Upstash 需要解析 JSON)
+    let finalCompressedData: string;
+    if (!useLocalRedis && typeof compressedDataResult === 'string') {
+      try {
+        const parsed = JSON.parse(compressedDataResult);
+        if (typeof parsed !== 'string') throw new Error('Parsed data is not a string');
+        finalCompressedData = parsed;
+      } catch (parseError) {
+        console.error(`Failed to parse Upstash response for ID ${id}:`, compressedDataResult, parseError);
+        throw new Error('Invalid data format received from storage.');
+      }
+    } else if (useLocalRedis && typeof compressedDataResult === 'string'){
+      finalCompressedData = compressedDataResult;
+    } else {
+      throw new Error('Unexpected compressed data type or null after fetch');
+    }
+
+    // 3. 解压缩 (使用 finalCompressedData)
+    const decompressed = decompressString(finalCompressedData);
     if (decompressed === null) {
       console.error(`Decompression failed for ID: ${id}`);
       return new Response('Failed to decompress data.', { status: 500, headers: { 'Content-Type': 'text/plain' } });
     }
 
-    // 3. 解密
+    // 4. 解密 (使用 decompressed)
     let decrypted: string;
     try {
       decrypted = await decryptData(decompressed, base64Key);
     } catch (decryptError) {
       console.error(`Decryption failed for ID: ${id}`, decryptError);
-      return new Response('Failed to decrypt data. Invalid key?', { status: 400, headers: { 'Content-Type': 'text/plain' } });
+      // 密钥错误返回 403 Forbidden 可能更合适
+      return new Response('Failed to decrypt data. Invalid key?', { status: 403, headers: { 'Content-Type': 'text/plain' } });
     }
 
-    // 4. 返回纯文本
+    // 5. 返回纯文本
     return new Response(decrypted, {
       status: 200,
       headers: {
@@ -80,8 +94,8 @@ export async function GET(
     });
 
   } catch (error) {
-    if (error instanceof UpstashNotFoundError) {
-        return new Response('Content not found or expired.', { status: 404, headers: { 'Content-Type': 'text/plain' } });
+    if (error instanceof NotFoundError || error instanceof UpstashNotFoundError) {
+      return new Response('Content not found or expired.', { status: 404, headers: { 'Content-Type': 'text/plain' } });
     }
     console.error(`Error processing raw request for ID: ${id}`, error);
     const message = error instanceof Error ? error.message : 'Internal Server Error';

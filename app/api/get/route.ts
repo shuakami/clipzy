@@ -3,6 +3,9 @@ import { type NextRequest } from 'next/server';
 import {
   upstashFetch,
   json,
+  isLocalMode,
+  localRedisGet,
+  NotFoundError,
   UpstashNotFoundError
 } from '../_utils/upstash';
 
@@ -13,30 +16,47 @@ interface UpstashGetResponse {
 
 export async function GET(req: NextRequest) {
   const id = req.nextUrl.searchParams.get('id');
-  if (!id) return json({ error: 'Missing id query parameter' }, 400);
+  if (!id) return json({ error: 'Missing ID parameter' }, 400);
+
+  const useLocalRedis = isLocalMode();
 
   try {
-    const { result } = await upstashFetch<UpstashGetResponse>(`get/${id}`);
-
-    if (result === null) throw new UpstashNotFoundError();
-
-    // Upstash 将 value 当作 JSON 字符串存储，这里需要两次反序列化
-    let compressedData: unknown;
-    try {
-      compressedData = JSON.parse(result);
-      if (typeof compressedData !== 'string') {
-        throw new Error('Parsed data is not a string');
+    let compressedData: string | null;
+    if (useLocalRedis) {
+      compressedData = await localRedisGet(id);
+      if (compressedData === null) {
+        throw new NotFoundError(`Data not found in local Redis for ID: ${id}`);
       }
-    } catch (e) {
-      throw new Error(`Malformed data in storage – ${e}`);
+    } else {
+      const { result } = await upstashFetch<UpstashGetResponse>(`get/${id}`);
+      if (result === null) {
+        throw new UpstashNotFoundError();
+      }
+      compressedData = result;
     }
 
-    return json({ compressedData });
+    let finalCompressedData: string;
+    if (!useLocalRedis && typeof compressedData === 'string') {
+      try {
+        const parsed = JSON.parse(compressedData);
+        if (typeof parsed !== 'string') throw new Error('Parsed data is not a string');
+        finalCompressedData = parsed;
+      } catch (parseError) {
+        console.error(`Failed to parse Upstash response for ID ${id}:`, compressedData, parseError);
+        throw new Error('Invalid data format received from storage.');
+      }
+    } else if (useLocalRedis && typeof compressedData === 'string') {
+      finalCompressedData = compressedData;
+    } else {
+      throw new Error('Unexpected compressed data type or null');
+    }
+
+    return json({ compressedData: finalCompressedData });
   } catch (e) {
-    if (e instanceof UpstashNotFoundError) {
-      return json({ error: e.message }, 404);
+    if (e instanceof NotFoundError || e instanceof UpstashNotFoundError) {
+      return json({ error: 'Data not found or expired' }, 404);
     }
     console.error('GET route error:', e);
-    return json({ error: 'Failed to retrieve data' }, 500);
+    return json({ error: `Failed to get data: ${e instanceof Error ? e.message : String(e)}` }, 500);
   }
 }
