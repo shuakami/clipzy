@@ -1,4 +1,4 @@
-import LZString from 'lz-string';
+import * as LZString from 'lz-string';
 
 const ALGO = 'AES-GCM';
 const KEY_LENGTH = 256;
