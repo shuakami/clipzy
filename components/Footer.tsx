@@ -5,7 +5,7 @@ export default function Footer() {
   const theme = {
     bg: 'bg-white dark:bg-black',
     textPrimary: 'text-black dark:text-white', 
-    textSecondary: 'text-neutral-600 dark:text-zinc-400',
+    textSecondary: 'text-neutral-600 dark:text-neutral-300',
     link: 'text-blue-600 dark:text-blue-400 hover:underline',
     border: 'border-neutral-200 dark:border-zinc-700',
   };

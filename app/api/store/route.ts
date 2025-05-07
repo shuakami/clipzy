@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
     let result: 'OK';
     if (useLocalRedis) {
       // 本地模式：调用 localRedisSet
-      result = await localRedisSet(id, JSON.stringify(compressedData!), ttlSeconds);
+      result = await localRedisSet(id, compressedData!, ttlSeconds);
     } else {
       // Upstash 模式：调用 upstashFetch (需要保留 URL 中的 TTL)
       let upstashEndpoint = `set/${id}`; 
