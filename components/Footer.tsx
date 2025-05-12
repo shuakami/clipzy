@@ -14,14 +14,14 @@ export default function Footer() {
     <footer className="px-8 py-6 flex flex-col items-start space-y-4">
       <div className="flex items-center">
         <Image 
-          src="/assets/clipzy.png" 
+          src="/assets/clipzy-white-r.png" 
           width={70} 
           height={24} 
           alt="Logo" 
           className="dark:hidden" 
         />
         <Image 
-          src="/assets/clipzy-white.png" 
+          src="/assets/clipzy-r.png" 
           width={70} 
           height={24} 
           alt="Logo" 
