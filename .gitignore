@@ -45,3 +45,5 @@ yarn-error.log*
 
 # Output
 /dist
+
+/sysinfo-cpp/build
