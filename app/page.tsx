@@ -9,6 +9,7 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import Footer from '../components/Footer';
+import Link from 'next/link';
 
 import { usePrefersDarkMode, useTheme } from '../hooks/useThemeManager';
 import { useClipLogic, LoadingState, LOADING_MESSAGES } from '../hooks/useClipLogic';
@@ -119,7 +120,13 @@ export default memo(function Page() {
     <div className={`flex flex-col min-h-screen ${theme.bg}`}>
       {/* Header */}
       <header className="px-8 py-6 flex justify-between items-center">
-        <Image src={dark ? '/assets/clipzy-white.png' : '/assets/clipzy.png'} width={80} height={40} alt="Clipzy Logo" className="cursor-pointer" onClick={handleFullReset} />
+        <div className="flex items-center gap-8">
+          <Image src={dark ? '/assets/clipzy-white.png' : '/assets/clipzy.png'} width={80} height={40} alt="Clipzy Logo" className="cursor-pointer" onClick={handleFullReset} />
+          <Link href="/lan" className={`hidden md:flex items-center gap-2 ${theme.textSecondary} hover:text-opacity-80 transition-opacity`}>
+            <span>局域网快传</span>
+            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-teal-100 text-teal-800 dark:bg-teal-900/50 dark:text-teal-300">Beta</span>
+          </Link>
+        </div>
         <button onClick={() => setDark(d => !d)} className={theme.btnSecondary}>{dark ? '☀️' : '🌙'}</button>
       </header>
 
