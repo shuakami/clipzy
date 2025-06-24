@@ -222,19 +222,21 @@ export default memo(function Page() {
               </div>
               <div className="space-y-2">
                 <label className={`${theme.textSecondary} text-sm mb-2 block`}>分享链接</label>
-                <div className={`flex items-center border ${theme.border} rounded-md overflow-hidden ${theme.inputBg}`}>
-                  <input readOnly value={shareUrl} onClick={e => e.currentTarget.select()} className="flex-1 px-4 py-3 focus:outline-none text-sm" />
-                  <button onClick={() => setIsModalOpen(true)} className={`px-4 py-3 ${theme.btnSecondary} border-l ${theme.border}`}>扫码</button>
-                  <button onClick={() => copyUrl(shareUrl)} className={`px-4 py-3 ${urlCopied ? theme.success : theme.btnSecondary} border-l ${theme.border}`}>{urlCopied ? '已复制' : '复制'}</button>
+                <div className={`flex flex-col md:flex-row border ${theme.border} rounded-md overflow-hidden ${theme.inputBg}`}>
+                  <input readOnly value={shareUrl} onClick={e => e.currentTarget.select()} className={`w-full md:flex-1 px-4 py-3 focus:outline-none text-sm bg-transparent ${theme.textPrimary}`} />
+                  <div className="flex">
+                    <button onClick={() => setIsModalOpen(true)} className={`flex-1 md:flex-initial px-4 py-3 ${theme.btnSecondary} border-t md:border-t-0 md:border-l ${theme.border}`}>扫码</button>
+                    <button onClick={() => copyUrl(shareUrl)} className={`flex-1 md:flex-initial px-4 py-3 ${urlCopied ? theme.success : theme.btnSecondary} border-l ${theme.border}`}>{urlCopied ? '已复制' : '复制'}</button>
+                  </div>
                 </div>
               </div>
               <div className="space-y-2">
                 <label className={`${theme.textSecondary} text-sm font-medium block`}>或者，获取纯文本链接
                   <span onClick={() => setShowRaw(s => !s)} className="ml-1 text-zinc-400 hover:underline cursor-pointer">{showRaw ? '(收起事项)' : '(注意事项)'}</span>
                 </label>
-                <div className={`flex items-center border ${theme.border} rounded-md overflow-hidden ${theme.inputBg}`}>
-                  <input readOnly value={rawUrl} onClick={e => e.currentTarget.select()} className="flex-1 px-4 py-3 focus:outline-none text-sm" />
-                  <button onClick={() => copyRaw(rawUrl)} className={`px-4 py-3 ${rawCopied ? theme.success : theme.btnSecondary} border-l ${theme.border}`}>{rawCopied ? '已复制' : '复制'}</button>
+                <div className={`flex flex-col md:flex-row border ${theme.border} rounded-md overflow-hidden ${theme.inputBg}`}>
+                  <input readOnly value={rawUrl} onClick={e => e.currentTarget.select()} className={`w-full md:flex-1 px-4 py-3 focus:outline-none text-sm bg-transparent ${theme.textPrimary}`} />
+                  <button onClick={() => copyRaw(rawUrl)} className={`px-4 py-3 ${rawCopied ? theme.success : theme.btnSecondary} border-t md:border-t-0 md:border-l ${theme.border}`}>{rawCopied ? '已复制' : '复制'}</button>
                 </div>
                 <AnimatePresence>
                   {showRaw && (
