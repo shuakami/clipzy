@@ -278,7 +278,6 @@ export default memo(function Page() {
         onClose={() => setIsModalOpen(false)}
         url={shareUrl || ''}
         theme={theme}
-        dark={dark}
       />
     </div>);
 });

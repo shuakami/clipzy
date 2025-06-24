@@ -13,10 +13,9 @@ interface QRCodeModalProps {
     btnSecondary: string;
     border: string;
   };
-  dark: boolean;
 }
 
-export const QRCodeModal: React.FC<QRCodeModalProps> = ({ isOpen, onClose, url, theme, dark }) => {
+export const QRCodeModal: React.FC<QRCodeModalProps> = ({ isOpen, onClose, url, theme }) => {
   return (
     <AnimatePresence>
       {isOpen && (
