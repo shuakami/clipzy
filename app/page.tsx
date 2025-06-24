@@ -1,7 +1,7 @@
 // app/page.tsx
 'use client';
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   useEffect, useMemo,Suspense, useDeferredValue, memo, useRef
 } from 'react';
@@ -13,6 +13,7 @@ import Footer from '../components/Footer';
 import { usePrefersDarkMode, useTheme } from '../hooks/useThemeManager';
 import { useClipLogic, LoadingState, LOADING_MESSAGES } from '../hooks/useClipLogic';
 import { useSyntaxHighlighting, detectLanguage } from '../hooks/useSyntaxHighlighting';
+import { QRCodeModal } from '../components/QRCodeModal';
 
 const SyntaxHighlighter = dynamic(async () => {
   const { Light } = await import('react-syntax-highlighter');
@@ -43,6 +44,7 @@ export default memo(function Page() {
   const [dark, setDark] = usePrefersDarkMode();
   const theme = useTheme(dark);
   const syntaxStyle = useSyntaxHighlighting(dark);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const {
     input, setInput,
@@ -222,6 +224,7 @@ export default memo(function Page() {
                 <label className={`${theme.textSecondary} text-sm mb-2 block`}>分享链接</label>
                 <div className={`flex items-center border ${theme.border} rounded-md overflow-hidden ${theme.inputBg}`}>
                   <input readOnly value={shareUrl} onClick={e => e.currentTarget.select()} className="flex-1 px-4 py-3 focus:outline-none text-sm" />
+                  <button onClick={() => setIsModalOpen(true)} className={`px-4 py-3 ${theme.btnSecondary} border-l ${theme.border}`}>扫码</button>
                   <button onClick={() => copyUrl(shareUrl)} className={`px-4 py-3 ${urlCopied ? theme.success : theme.btnSecondary} border-l ${theme.border}`}>{urlCopied ? '已复制' : '复制'}</button>
                 </div>
               </div>
@@ -241,7 +244,7 @@ export default memo(function Page() {
                   )}
                 </AnimatePresence>
               </div>
-              <button onClick={handleFullReset} className={`${theme.btnPrimary} px-6 py-2 self-start`}>创建新剪贴</button>
+              <button onClick={handleFullReset} className={`${theme.btnPrimary} px-6 py-2 self-start mt-8`}>创建新剪贴</button>
             </motion.div>
           )}
 
@@ -267,6 +270,15 @@ export default memo(function Page() {
         </AnimatePresence>
       </main>
 
+      {/* Footer */}
       <Footer />
+      
+      <QRCodeModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        url={shareUrl || ''}
+        theme={theme}
+        dark={dark}
+      />
     </div>);
 });
