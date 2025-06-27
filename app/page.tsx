@@ -147,24 +147,21 @@ export default memo(function Page() {
       <AnimatePresence>
         {showBanner && (
           <motion.div
-            initial={{ opacity: 0, y: -24 }}
+            initial={{ opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -24 }}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
-            className="max-w-3xl mx-auto mt-2 mb-4 px-6 py-4 rounded-2xl shadow-lg flex items-center gap-4 bg-gradient-to-r from-blue-100/80 via-teal-100/80 to-green-100/80 dark:from-blue-900/60 dark:via-teal-900/60 dark:to-green-900/60 border border-blue-200 dark:border-blue-800/40 relative"
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            className="max-w-2xl mx-auto mt-2 mb-4 px-4 py-2 rounded-lg flex items-center gap-3 bg-blue-50 dark:bg-zinc-800 border border-blue-100 dark:border-zinc-700"
             style={{ zIndex: 20 }}
           >
-            <div className="flex-shrink-0 text-3xl md:text-4xl text-blue-500 dark:text-blue-300">🚀</div>
-            <div className="flex-1 min-w-0">
-              <div className="font-semibold text-base md:text-lg text-blue-900 dark:text-blue-100 mb-0.5">临时剪切板限制大幅提升！</div>
-              <div className="text-sm md:text-base text-blue-800 dark:text-blue-200 leading-relaxed">单次可分享内容已提升至 <span className="font-bold text-green-700 dark:text-green-300">200万字 / 8MB</span>，欢迎体验更大文本的极速加密分享！</div>
-            </div>
+            <span className="text-lg text-blue-500 dark:text-blue-300">📈</span>
+            <span className="flex-1 text-sm text-blue-900 dark:text-blue-100 truncate">临时剪切板单次上限已提升至 <b className="font-medium text-green-700 dark:text-green-300">200万字/8MB</b>，欢迎体验。</span>
             <button
               onClick={handleCloseBanner}
-              className="ml-2 p-2 rounded-full hover:bg-blue-200/60 dark:hover:bg-blue-800/40 transition-colors text-blue-700 dark:text-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="ml-1 p-1 rounded hover:bg-blue-100 dark:hover:bg-zinc-700 transition-colors text-blue-500 dark:text-blue-300 focus:outline-none"
               aria-label="关闭横幅"
             >
-              <svg width="20" height="20" fill="none" viewBox="0 0 20 20"><path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M6 6l8 8M6 14L14 6"/></svg>
+              <svg width="16" height="16" fill="none" viewBox="0 0 20 20"><path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M6 6l8 8M6 14L14 6"/></svg>
             </button>
           </motion.div>
         )}
