@@ -147,17 +147,17 @@ export default memo(function Page() {
       <AnimatePresence>
         {showBanner && (
           <motion.div
-            initial={{ opacity: 0, y: -12 }}
+            initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
-            className="max-w-2xl mx-auto mt-2 mb-4 px-4 py-2 rounded-lg flex items-center gap-3 bg-blue-50 dark:bg-zinc-800 border border-blue-100 dark:border-zinc-700"
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="max-w-2xl mx-auto mt-2 mb-4 px-5 py-2.5 rounded-2xl flex items-center gap-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 shadow-sm"
             style={{ zIndex: 20 }}
           >
-            <span className="flex-1 text-sm text-blue-900 dark:text-blue-100 truncate">临时剪切板单次上限已提升至 <b className="font-medium text-green-700 dark:text-green-300">200万字/8MB</b>，欢迎体验。</span>
+            <span className="flex-1 text-sm text-zinc-800 dark:text-zinc-100 truncate">临时剪切板单次上限已提升至 <b className="font-medium text-amber-700 dark:text-amber-400">200万字/8MB</b>，欢迎体验。</span>
             <button
               onClick={handleCloseBanner}
-              className="ml-1 p-1 rounded hover:bg-blue-100 dark:hover:bg-zinc-700 transition-colors text-black dark:text-white focus:outline-none"
+              className="ml-1 p-1.5 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-500 dark:text-zinc-400 focus:outline-none"
               aria-label="关闭横幅"
             >
               <svg width="16" height="16" fill="none" viewBox="0 0 20 20"><path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M6 6l8 8M6 14L14 6"/></svg>
