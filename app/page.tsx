@@ -129,6 +129,17 @@ export default memo(function Page() {
     }
   }, []);
 
+  useEffect(() => {
+    if (!showBanner) return;
+    const timer = setTimeout(() => {
+      setShowBanner(false);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('clipzy_limit_banner_closed', '1');
+      }
+    }, 15000);
+    return () => clearTimeout(timer);
+  }, [showBanner]);
+
   return (
     <div className={`flex flex-col min-h-screen ${theme.bg}`}>
       {/* Header */}
