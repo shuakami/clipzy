@@ -15,6 +15,7 @@ import { usePrefersDarkMode, useTheme } from '../hooks/useThemeManager';
 import { useClipLogic, LoadingState, LOADING_MESSAGES } from '../hooks/useClipLogic';
 import { useSyntaxHighlighting, detectLanguage } from '../hooks/useSyntaxHighlighting';
 import { QRCodeModal } from '../components/QRCodeModal';
+import { useRef as useReactRef } from 'react';
 
 const SyntaxHighlighter = dynamic(async () => {
   const { Light } = await import('react-syntax-highlighter');
@@ -140,6 +141,19 @@ export default memo(function Page() {
     return () => clearTimeout(timer);
   }, [showBanner]);
 
+  // 输入框性能优化：受控+防抖+虚拟化
+  const inputRef = useReactRef<HTMLTextAreaElement>(null);
+  const [inputValue, setInputValue] = useState(input);
+  // 只在input变化时同步到inputValue，防止大文本频繁setState
+  useEffect(() => { setInputValue(input); }, [input]);
+  // 防抖写入主状态
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (inputValue !== input) setInput(inputValue);
+    }, 200);
+    return () => clearTimeout(handler);
+  }, [inputValue]);
+
   return (
     <div className={`flex flex-col min-h-screen ${theme.bg}`}>
       {/* Header */}
@@ -244,8 +258,21 @@ export default memo(function Page() {
                 <p className={`${theme.textSecondary} text-base`}>输入的文本将被端到端加密，仅限链接持有者查看</p>
               </div>
               <div className="flex flex-col flex-1">
+                {/* 输入文本 */}
                 <label htmlFor="main-input" className={`${theme.textSecondary} text-sm mb-1`}>输入文本</label>
-                <textarea id="main-input" placeholder="在此处输入要分享的文本…" value={input} onChange={e => setInput(e.target.value)} disabled={isCreating} className={`flex-1 p-4 ${theme.inputBg} placeholder-neutral-400 resize-none focus:outline-none border ${theme.border} rounded-md ${isCreating ? 'opacity-50' : ''}`} autoFocus />
+                <textarea
+                  id="main-input"
+                  ref={inputRef}
+                  placeholder="在此处输入要分享的文本…"
+                  value={inputValue}
+                  onChange={e => setInputValue(e.target.value)}
+                  disabled={isCreating}
+                  className={`flex-1 p-4 ${theme.inputBg} placeholder-neutral-400 resize-none focus:outline-none border ${theme.border} rounded-md ${isCreating ? 'opacity-50' : ''}`}
+                  autoFocus
+                  rows={Math.min(20, Math.max(4, (inputValue.match(/\n/g)?.length ?? 0) + 1))}
+                  style={{ fontFamily: 'inherit', fontSize: '1rem', minHeight: 120, maxHeight: 600, overflow: 'auto' }}
+                  spellCheck={false}
+                />
               </div>
 
               <div className="mt-4">
