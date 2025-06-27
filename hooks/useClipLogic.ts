@@ -100,8 +100,9 @@ export function useClipLogic() {
   const upload = useCallback(async () => {
     if (isCreating || !input) return;
     const chars = input.length;
-    const max = (expiration === -1 || expiration > 604800) ? 170000 : 700000;
-    const limitDesc = (expiration === -1 || expiration > 604800) ? '上限 17 万字' : '上限 70 万字';
+    // 永久/长期：17万字，非永久：200万字
+    const max = (expiration === -1 || expiration > 604800) ? 170000 : 2000000;
+    const limitDesc = (expiration === -1 || expiration > 604800) ? '上限 17 万字' : '上限 200 万字';
     if (chars > max) return setError(`输入内容过长 (${chars.toLocaleString('zh-CN')} 字)，当前过期时间设置下限为 ${limitDesc}。`);
     setError(null); 
     setDecrypted(null);
@@ -194,4 +195,4 @@ export function useClipLogic() {
     reset,
     onErr
   };
-} 
+}

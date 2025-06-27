@@ -46,6 +46,12 @@ export default memo(function Page() {
   const theme = useTheme(dark);
   const syntaxStyle = useSyntaxHighlighting(dark);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showBanner, setShowBanner] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('clipzy_limit_banner_closed') !== '1';
+    }
+    return true;
+  });
 
   const {
     input, setInput,
@@ -116,6 +122,13 @@ export default memo(function Page() {
   const detectedLang = useMemo(() => decrypted ? detectLanguage(decrypted) : 'plaintext', [decrypted]);
   const deferredDecrypted = useDeferredValue(decrypted);
 
+  const handleCloseBanner = useCallback(() => {
+    setShowBanner(false);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('clipzy_limit_banner_closed', '1');
+    }
+  }, []);
+
   return (
     <div className={`flex flex-col min-h-screen ${theme.bg}`}>
       {/* Header */}
@@ -129,6 +142,33 @@ export default memo(function Page() {
         </div>
         <button onClick={() => setDark(d => !d)} className={theme.btnSecondary}>{dark ? '☀️' : '🌙'}</button>
       </header>
+
+      {/* Banner - 仅首次显示 */}
+      <AnimatePresence>
+        {showBanner && (
+          <motion.div
+            initial={{ opacity: 0, y: -24 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -24 }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+            className="max-w-3xl mx-auto mt-2 mb-4 px-6 py-4 rounded-2xl shadow-lg flex items-center gap-4 bg-gradient-to-r from-blue-100/80 via-teal-100/80 to-green-100/80 dark:from-blue-900/60 dark:via-teal-900/60 dark:to-green-900/60 border border-blue-200 dark:border-blue-800/40 relative"
+            style={{ zIndex: 20 }}
+          >
+            <div className="flex-shrink-0 text-3xl md:text-4xl text-blue-500 dark:text-blue-300">🚀</div>
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold text-base md:text-lg text-blue-900 dark:text-blue-100 mb-0.5">临时剪切板限制大幅提升！</div>
+              <div className="text-sm md:text-base text-blue-800 dark:text-blue-200 leading-relaxed">单次可分享内容已提升至 <span className="font-bold text-green-700 dark:text-green-300">200万字 / 8MB</span>，欢迎体验更大文本的极速加密分享！</div>
+            </div>
+            <button
+              onClick={handleCloseBanner}
+              className="ml-2 p-2 rounded-full hover:bg-blue-200/60 dark:hover:bg-blue-800/40 transition-colors text-blue-700 dark:text-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              aria-label="关闭横幅"
+            >
+              <svg width="20" height="20" fill="none" viewBox="0 0 20 20"><path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M6 6l8 8M6 14L14 6"/></svg>
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Main */}
       <main className="flex-1 flex flex-col px-8 pt-6 pb-12 max-w-4xl mx-auto w-full">
@@ -204,9 +244,9 @@ export default memo(function Page() {
               <div className="mt-4">
                 <label htmlFor="exp" className={`${theme.textSecondary} text-sm mb-1`}>过期时间</label>
                 <select id="exp" value={expiration} onChange={e => setExpiration(Number(e.target.value))} disabled={isCreating} className={`w-full p-2 border ${theme.border} ${theme.inputBg} rounded-md text-sm ${isCreating ? 'opacity-50' : ''}`}>
-                  <option value={3600}>1 小时 (上限 70 万字)</option>
-                  <option value={86400}>1 天 (上限 70 万字)</option>
-                  <option value={604800}>7 天 (上限 70 万字)</option>
+                  <option value={3600}>1 小时 (上限 200 万字)</option>
+                  <option value={86400}>1 天 (上限 200 万字)</option>
+                  <option value={604800}>7 天 (上限 200 万字)</option>
                   <option value={-1}>永久有效 (上限 17 万字)</option>
                 </select>
               </div>

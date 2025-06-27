@@ -65,8 +65,8 @@ export default function DocsPage() {
                 <li>大小限制:
                   <ul className="list-disc pl-8 mt-1 space-y-1">
                     <li>永久或超过 7 天：约 17 万字符上限。</li>
-                    <li>7 天及以内：约 70 万字符上限。</li>
-                    <li>(注意：服务器端基于压缩后数据有对应限制，分别为 ~0.6MB 和 ~2MB)</li>
+                    <li>7 天及以内：约 200 万字符上限。</li>
+                    <li>(注意：服务器端基于压缩后数据有对应限制，分别为 ~0.6MB 和 ~8MB)</li>
                   </ul>
                 </li>
               </ul>
@@ -116,7 +116,7 @@ export default function DocsPage() {
             <li><code className={inlineCodeStyle}>413 Payload Too Large</code>: 请求体（压缩后数据）超过限制。
               <ul className="list-disc pl-5 mt-1 space-y-0.5">
                 <li>若 TTL 为永久或 &gt; 7天: 限制约 0.6MB。</li>
-                <li>若 TTL &lt;= 7天: 限制为 2MB。</li>
+                <li>若 TTL &lt;= 7天: 限制为 8MB。</li>
               </ul>
             </li>
             <li><code className={inlineCodeStyle}>405 Method Not Allowed</code>: 非 POST 方法。</li>
