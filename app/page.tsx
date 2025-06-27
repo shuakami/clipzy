@@ -154,11 +154,10 @@ export default memo(function Page() {
             className="max-w-2xl mx-auto mt-2 mb-4 px-4 py-2 rounded-lg flex items-center gap-3 bg-blue-50 dark:bg-zinc-800 border border-blue-100 dark:border-zinc-700"
             style={{ zIndex: 20 }}
           >
-            <span className="text-lg text-blue-500 dark:text-blue-300">📈</span>
             <span className="flex-1 text-sm text-blue-900 dark:text-blue-100 truncate">临时剪切板单次上限已提升至 <b className="font-medium text-green-700 dark:text-green-300">200万字/8MB</b>，欢迎体验。</span>
             <button
               onClick={handleCloseBanner}
-              className="ml-1 p-1 rounded hover:bg-blue-100 dark:hover:bg-zinc-700 transition-colors text-blue-500 dark:text-blue-300 focus:outline-none"
+              className="ml-1 p-1 rounded hover:bg-blue-100 dark:hover:bg-zinc-700 transition-colors text-black dark:text-white focus:outline-none"
               aria-label="关闭横幅"
             >
               <svg width="16" height="16" fill="none" viewBox="0 0 20 20"><path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M6 6l8 8M6 14L14 6"/></svg>
