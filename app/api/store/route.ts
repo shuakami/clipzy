@@ -41,9 +41,9 @@ export async function POST(req: NextRequest) {
   let currentMaxCompressedSizeBytes: number;
   const sevenDaysInSeconds = 60 * 60 * 24 * 7;
   // 永久或长于7天的，限制压缩后约 0.6MB
-  const longTermCompressedLimitBytes = 0.6 * 1024 * 1024;
-  // 7天及以内的，限制压缩后 2MB
-  const defaultCompressedLimitBytes = 2 * 1024 * 1024;
+  const longTermCompressedLimitBytes = 0.6 * 1024 * 1024; // 约 17 万字
+  // 7天及以内的，限制压缩后 8MB
+  const defaultCompressedLimitBytes = 8 * 1024 * 1024; // 约 200 万字
 
   if (ttlSeconds === null || (ttlSeconds !== null && ttlSeconds > sevenDaysInSeconds)) {
     // 永久 或 TTL > 7 天
