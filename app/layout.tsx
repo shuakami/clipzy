@@ -1,5 +1,4 @@
 import { GeistSans } from 'geist/font/sans';
-import { GeistMono } from 'geist/font/mono';
 import "./globals.css";
 import { metadata } from './metadata';
 import { Providers } from './providers';
@@ -24,5 +23,3 @@ export default function RootLayout({
     </html>
   );
 }
-
-export { metadata };
