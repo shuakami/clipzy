@@ -2,14 +2,15 @@ import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
 import "./globals.css";
 import { metadata } from './metadata';
+import { Providers } from './providers';
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="zh-CN" className={`${GeistSans.variable} ${GeistMono.variable}`}>
+    <html lang="zh-CN" suppressHydrationWarning>
       <head>
         {/* Favicons for light and dark themes */}
         <link rel="icon" href="/clipzy_black.ico" media="(prefers-color-scheme: light)" />
@@ -17,7 +18,9 @@ export default function RootLayout({
         {/* Fallback icon */}
         <link rel="icon" href="/clipzy_black.ico" />
       </head>
-      <body>{children}</body>
+      <body className={`${GeistSans.className} transition-colors duration-300 ease-in-out`}>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }
