@@ -1,6 +1,7 @@
 import { GeistSans } from 'geist/font/sans';
 import "./globals.css";
 import { Providers } from './providers';
+import { metadata } from './metadata';
 
 export default function RootLayout({
   children,
@@ -22,3 +23,5 @@ export default function RootLayout({
     </html>
   );
 }
+
+export { metadata };
