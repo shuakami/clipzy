@@ -2,11 +2,16 @@
 import { type NextRequest } from 'next/server';
 import {
   upstashFetch, json, isLocalMode,
-  localRedisSet
+  localRedisSet,
+  handleOptions
 } from '../_utils/upstash';
 
 const DEFAULT_TTL_SECONDS = 60 * 60; // 1 小时
 const MAX_NON_PERMANENT_TTL_SECONDS = 60 * 60 * 24 * 30; // 非永久 TTL 的最大值（30 天）
+
+export async function OPTIONS(req: NextRequest) {
+  return handleOptions(req);
+}
 
 export async function POST(req: NextRequest) {
   let compressedData: string | undefined;
@@ -21,7 +26,7 @@ export async function POST(req: NextRequest) {
     if (typeof body.compressedData === 'string') {
       compressedData = body.compressedData;
     } else {
-      return json({ error: 'compressedData 必须是字符串' }, 400);
+      return json({ error: 'compressedData 必须是字符串' }, 400, req);
     }
 
     if (typeof body.ttl === 'number') {
@@ -34,7 +39,7 @@ export async function POST(req: NextRequest) {
     }
 
   } catch {
-    return json({ error: '无效的 JSON body' }, 400);
+    return json({ error: '无效的 JSON body' }, 400, req);
   }
 
   // 根据 TTL 动态确定最大压缩后体积限制
@@ -62,7 +67,8 @@ export async function POST(req: NextRequest) {
       {
         error: `请求体过大。收到 ${(compressedSizeBytes / (1024 * 1024)).toFixed(2)} MB，当前过期时间设置下，压缩后数据限制为 ${limitMB} MB.`
       },
-      413 // 413 Payload Too Large
+      413, // 413 Payload Too Large
+      req
     );
   }
 
@@ -97,10 +103,10 @@ export async function POST(req: NextRequest) {
     if (result !== 'OK') {
       throw new Error(`存储数据失败，未预期的结果: ${result}`);
     }
-    return json({ id });
+    return json({ id }, 200, req);
 
   } catch (e) {
     console.error('POST 路由错误:', e);
-    return json({ error: `存储数据失败: ${e instanceof Error ? e.message : String(e)}` }, 500);
+    return json({ error: `存储数据失败: ${e instanceof Error ? e.message : String(e)}` }, 500, req);
   }
 }

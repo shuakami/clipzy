@@ -6,7 +6,8 @@ import {
   isLocalMode,
   localRedisGet,
   NotFoundError,
-  UpstashNotFoundError
+  UpstashNotFoundError,
+  handleOptions
 } from '../_utils/upstash';
 
 // Upstash GET 返回格式
@@ -14,9 +15,13 @@ interface UpstashGetResponse {
   result: string | null;
 }
 
+export async function OPTIONS(req: NextRequest) {
+  return handleOptions(req);
+}
+
 export async function GET(req: NextRequest) {
   const id = req.nextUrl.searchParams.get('id');
-  if (!id) return json({ error: 'Missing ID parameter' }, 400);
+  if (!id) return json({ error: 'Missing ID parameter' }, 400, req);
 
   const useLocalRedis = isLocalMode();
 
@@ -51,12 +56,12 @@ export async function GET(req: NextRequest) {
       throw new Error('Unexpected compressed data type or null');
     }
 
-    return json({ compressedData: finalCompressedData });
+    return json({ compressedData: finalCompressedData }, 200, req);
   } catch (e) {
     if (e instanceof NotFoundError || e instanceof UpstashNotFoundError) {
-      return json({ error: 'Data not found or expired' }, 404);
+      return json({ error: 'Data not found or expired' }, 404, req);
     }
     console.error('GET route error:', e);
-    return json({ error: `Failed to get data: ${e instanceof Error ? e.message : String(e)}` }, 500);
+    return json({ error: `Failed to get data: ${e instanceof Error ? e.message : String(e)}` }, 500, req);
   }
 }

@@ -4,7 +4,9 @@ import {
   isLocalMode,
   localRedisGet,
   NotFoundError,
-  UpstashNotFoundError
+  UpstashNotFoundError,
+  handleOptions as handleCorsOptions,
+  getCorsHeaders
 } from '../../_utils/upstash';
 import { decompressString, decryptData } from '@/lib/crypto';
 
@@ -14,25 +16,38 @@ interface ApiContext {
   }
 }
 
+function createTextResponse(body: string, status: number, origin: string | null): Response {
+  const corsHeaders = getCorsHeaders(origin);
+  const headers = new Headers(corsHeaders);
+  headers.set('Content-Type', 'text/plain; charset=utf-8');
+  if (status === 200) {
+    headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    headers.set('Pragma', 'no-cache');
+    headers.set('Expires', '0');
+    headers.set('Surrogate-Control', 'no-store');
+  }
+  return new Response(body, { status, headers });
+}
+
 export async function GET(
   request: NextRequest,
   context: ApiContext
 ): Promise<NextResponse | Response> {
+  const origin = request.headers.get('origin');
   const { id } = context.params;
   const { searchParams } = new URL(request.url);
   const base64Key = searchParams.get('key');
 
   if (!id) {
-    return new Response('Missing ID parameter', { status: 400, headers: { 'Content-Type': 'text/plain' } });
+    return createTextResponse('Missing ID parameter', 400, origin);
   }
   if (!base64Key) {
-    return new Response('Missing key parameter', { status: 400, headers: { 'Content-Type': 'text/plain' } });
+    return createTextResponse('Missing key parameter', 400, origin);
   }
 
   const useLocalRedis = isLocalMode();
 
   try {
-    // 1. 根据模式获取压缩数据
     let compressedDataResult: string | null;
     if (useLocalRedis) {
       compressedDataResult = await localRedisGet(id);
@@ -47,7 +62,6 @@ export async function GET(
       compressedDataResult = result;
     }
 
-    // 2. 处理获取到的数据 (Upstash 需要解析 JSON)
     let finalCompressedData: string;
     if (!useLocalRedis && typeof compressedDataResult === 'string') {
       try {
@@ -64,53 +78,32 @@ export async function GET(
       throw new Error('Unexpected compressed data type or null after fetch');
     }
 
-    // 3. 解压缩 (使用 finalCompressedData)
     const decompressed = decompressString(finalCompressedData);
     if (decompressed === null) {
       console.error(`Decompression failed for ID: ${id}`);
-      return new Response('Failed to decompress data.', { status: 500, headers: { 'Content-Type': 'text/plain' } });
+      return createTextResponse('Failed to decompress data.', 500, origin);
     }
 
-    // 4. 解密 (使用 decompressed)
     let decrypted: string;
     try {
       decrypted = await decryptData(decompressed, base64Key);
     } catch (decryptError) {
       console.error(`Decryption failed for ID: ${id}`, decryptError);
-      // 密钥错误返回 403 Forbidden 可能更合适
-      return new Response('Failed to decrypt data. Invalid key?', { status: 403, headers: { 'Content-Type': 'text/plain' } });
+      return createTextResponse('Failed to decrypt data. Invalid key?', 403, origin);
     }
 
-    // 5. 返回纯文本
-    return new Response(decrypted, {
-      status: 200,
-      headers: {
-        'Content-Type': 'text/plain; charset=utf-8',
-        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
-        'Surrogate-Control': 'no-store'
-      }
-    });
+    return createTextResponse(decrypted, 200, origin);
 
   } catch (error) {
     if (error instanceof NotFoundError || error instanceof UpstashNotFoundError) {
-      return new Response('Content not found or expired.', { status: 404, headers: { 'Content-Type': 'text/plain' } });
+      return createTextResponse('Content not found or expired.', 404, origin);
     }
     console.error(`Error processing raw request for ID: ${id}`, error);
     const message = error instanceof Error ? error.message : 'Internal Server Error';
-    return new Response(`Server error: ${message}`, { status: 500, headers: { 'Content-Type': 'text/plain' } });
+    return createTextResponse(`Server error: ${message}`, 500, origin);
   }
 }
 
-// 添加 OPTIONS 方法以支持 CORS
-export async function OPTIONS() {
-  return new Response(null, {
-    status: 204,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    },
-  });
+export async function OPTIONS(request: NextRequest) {
+  return handleCorsOptions(request);
 }
