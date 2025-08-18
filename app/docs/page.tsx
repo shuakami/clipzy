@@ -1,6 +1,30 @@
 import Image from 'next/image';
 import Link from 'next/link'; // 可选：返回首页链接
 import Footer from '@/components/Footer'; // Import the Footer component
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: "API 文档 - 开发者接口说明",
+  description: "Clipzy API 完整文档，包含创建加密片段、获取数据、服务器端解密等接口的详细说明。支持端到端加密的临时文本分享服务开发。",
+  keywords: [
+    "Clipzy API", "API文档", "开发者文档", "接口文档", "REST API",
+    "加密API", "文本分享API", "临时存储API", "端到端加密API",
+    "clipzy api documentation", "developer api", "encryption api"
+  ],
+  openGraph: {
+    title: "Clipzy API 文档 - 开发者接口说明",
+    description: "完整的 Clipzy API 文档，包含所有接口的详细说明和示例代码。",
+    type: "article",
+  },
+  twitter: {
+    card: "summary",
+    title: "Clipzy API 文档 - 开发者接口说明",
+    description: "完整的 Clipzy API 文档，包含所有接口的详细说明和示例代码。",
+  },
+  alternates: {
+    canonical: "/docs",
+  },
+};
 
 // 代码块组件，可复用展示代码
 function CodeBlock({ language, children }: { language: string; children: string }) {
