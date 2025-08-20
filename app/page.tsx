@@ -148,7 +148,7 @@ export default memo(function Page() {
     const [isLargeText, setIsLargeText] = useState(false);
     const [isVeryLargeText, setIsVeryLargeText] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
-    const updateTimeoutRef = useRef<NodeJS.Timeout>();
+    const updateTimeoutRef = useRef<NodeJS.Timeout>(null);
     
     useEffect(() => { setInputValue(input); }, [input]);
     
