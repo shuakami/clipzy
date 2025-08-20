@@ -143,15 +143,31 @@ export default memo(function Page() {
         return () => window.removeEventListener('hashchange', handleHashChangeEvent);
     }, []);
     
-    // Input optimization
+    // Input optimization with better debouncing for large text
     const [inputValue, setInputValue] = useState(input);
+    const [isLargeText, setIsLargeText] = useState(false);
+    
     useEffect(() => { setInputValue(input); }, [input]);
+    
     useEffect(() => {
+        const isLarge = inputValue.length > 500000; // 50万字符阈值
+        setIsLargeText(isLarge);
+        
+        const delay = isLarge ? 1000 : inputValue.length > 100000 ? 500 : 200;
         const handler = setTimeout(() => {
             if (inputValue !== input) setInput(inputValue);
-        }, 200);
+        }, delay);
         return () => clearTimeout(handler);
     }, [inputValue, input, setInput]);
+    
+    // 对于超大文本，使用更智能的行数计算
+    const calculateRows = useCallback(() => {
+        if (inputValue.length > 1000000) return 20; // 超过100万字符固定20行
+        if (inputValue.length > 50000) return 15;   // 超过5万字符固定15行
+        return Math.min(20, Math.max(4, (inputValue.match(/\n/g)?.length ?? 0) + 1));
+    }, [inputValue]);
+    
+    const memoizedRows = useMemo(() => calculateRows(), [calculateRows]);
 
     const detectedLang = useMemo(() => decrypted ? detectLanguage(decrypted) : 'plaintext', [decrypted]);
     const deferredDecrypted = useDeferredValue(decrypted);
@@ -300,9 +316,26 @@ export default memo(function Page() {
                                     disabled={isCreating}
                                     className={`enhanced-input flex-1 p-4 ${themeClasses.inputBg} placeholder-neutral-400 resize-none focus:outline-none border ${themeClasses.border} rounded-md ${isCreating ? 'opacity-50' : ''} transition-colors duration-300`}
                                     autoFocus
-                                    rows={Math.min(20, Math.max(4, (inputValue.match(/\n/g)?.length ?? 0) + 1))}
-                                    style={{ fontFamily: 'inherit', fontSize: '1rem', minHeight: 120, maxHeight: 600, overflow: 'auto' }}
+                                    rows={memoizedRows}
+                                    style={{ 
+                                        fontFamily: 'inherit', 
+                                        fontSize: '1rem', 
+                                        minHeight: 120, 
+                                        maxHeight: 600, 
+                                        overflow: 'auto',
+                                        whiteSpace: isLargeText ? 'pre' : 'pre-wrap',
+                                        wordBreak: isLargeText ? 'break-all' : 'break-word',
+                                        // 对于超大文本禁用一些昂贵的特性
+                                        resize: isLargeText ? 'none' : 'vertical'
+                                    }}
                                     spellCheck={false}
+                                    autoComplete="off"
+                                    autoCorrect="off"
+                                    autoCapitalize="off"
+                                    wrap={isLargeText ? 'off' : 'soft'}
+                                    // 超大文本时减少一些事件监听
+                                    onCompositionStart={isLargeText ? undefined : undefined}
+                                    onCompositionEnd={isLargeText ? undefined : undefined}
                                 />
                             </div>
 
