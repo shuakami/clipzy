@@ -175,8 +175,8 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         
         {/* Preload critical resources */}
-        <link rel="preload" href="/assets/clipzy.png" as="image" type="image/png" />
-        <link rel="preload" href="/assets/clipzy-white.png" as="image" type="image/png" />
+        <link rel="preload" href="/assets/clipzy.png" as="image" type="image/png" media="(prefers-color-scheme: light)" />
+        <link rel="preload" href="/assets/clipzy-white.png" as="image" type="image/png" media="(prefers-color-scheme: dark)" />
         
         {/* 性能和安全相关 */}
         <meta httpEquiv="X-Content-Type-Options" content="nosniff" />
