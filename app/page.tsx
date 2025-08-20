@@ -178,7 +178,15 @@ export default memo(function Page() {
             {/* Header */}
             <header className="px-8 py-6 flex justify-between items-center">
                 <div className="flex items-center gap-8">
-                    <Image src={dark ? '/assets/clipzy-white.png' : '/assets/clipzy.png'} width={80} height={40} alt="Clipzy Logo" className="cursor-pointer" onClick={handleFullReset} />
+                    <Image 
+                        src={dark ? '/assets/clipzy-white.png' : '/assets/clipzy.png'} 
+                        width={80} 
+                        height={40} 
+                        alt="Clipzy - 在线安全剪贴板 | 端到端加密文本分享服务" 
+                        className="cursor-pointer" 
+                        onClick={handleFullReset}
+                        priority
+                    />
                     <Link href="/lan" className={`hidden md:flex items-center gap-2 ${themeClasses.textSecondary} hover:text-opacity-80 transition-colors duration-300`}>
                         <span>局域网快传</span>
                         <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-teal-100 text-teal-800 dark:bg-teal-900/50 dark:text-teal-300">Beta</span>
@@ -227,7 +235,7 @@ export default memo(function Page() {
                             <div className="flex justify-between items-start mb-8">
                                 <div className="max-w-3xl">
                                     <h2 className={`${themeClasses.textPrimary} text-4xl font-extralight mb-3`}>已解密内容</h2>
-                                    <p className={`${themeClasses.textSecondary} text-base`}>此内容已被安全解密，仅限当前设备访问</p>
+                                    <p className={`${themeClasses.textSecondary} text-base`}>此内容已被安全解密，仅限当前设备访问。Clipzy 采用端到端加密技术保护您的数据安全。</p>
                                 </div>
                                 <div className="flex space-x-4">
                                     <button onClick={() => copyText(deferredDecrypted!)} className={`${themeClasses.btnSecondary} transition-colors duration-300`}>
@@ -275,8 +283,12 @@ export default memo(function Page() {
                     {!isReading && !decrypted && !shareUrl && !isNotFound && (
                         <motion.div key="input" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col flex-1">
                             <div className="mb-8 max-w-3xl">
-                                <h2 className={`${themeClasses.textPrimary} text-4xl font-extralight mb-3`}>新建分享</h2>
-                                <p className={`${themeClasses.textSecondary} text-base`}>输入的文本将被端到端加密，仅限链接持有者查看</p>
+                                <h1 className={`${themeClasses.textPrimary} text-4xl font-extralight mb-3`}>新建分享</h1>
+                                <p className={`${themeClasses.textSecondary} text-base`}>输入的文本将被端到端加密，仅限链接持有者查看。Clipzy 是最安全的在线剪贴板工具，完全免费使用。</p>
+                                {/* 隐藏的SEO内容 */}
+                                <div className="sr-only">
+                                    在线剪贴板 网络剪贴板 临时剪贴板 安全剪贴板 免费剪贴板 文本分享 代码分享 端到端加密 阅后即焚 隐私保护
+                                </div>
                             </div>
                             <div className="flex flex-col flex-1">
                                 <label htmlFor="main-input" className={`${themeClasses.textSecondary} text-sm mb-1 transition-colors duration-300`}>输入文本</label>
@@ -318,7 +330,7 @@ export default memo(function Page() {
                         <motion.div key="share" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col flex-1 space-y-8">
                             <div>
                                 <h2 className={`${themeClasses.textPrimary} text-4xl font-extralight mb-2`}>链接已创建</h2>
-                                <p className={`${themeClasses.textSecondary} text-base`}>已自动复制<span className="font-semibold">最安全</span>的链接到剪贴板，此链接包含解密密钥，有效期为{expiration === -1 ? '永久' : expiration === 3600 ? '1小时' : expiration === 86400 ? '1天' : '7天'}</p>
+                                <p className={`${themeClasses.textSecondary} text-base`}>已自动复制<span className="font-semibold">最安全</span>的链接到剪贴板，此链接包含解密密钥，有效期为{expiration === -1 ? '永久' : expiration === 3600 ? '1小时' : expiration === 86400 ? '1天' : '7天'}。Clipzy 保护您的数据隐私安全。</p>
                             </div>
                             <div className="space-y-2">
                                 <label className={`${themeClasses.textSecondary} text-sm mb-2 block`}>分享链接</label>

@@ -7,18 +7,27 @@ export const metadata: Metadata = {
     default: "Clipzy - 在线安全剪贴板 | 端到端加密文本分享服务",
     template: "%s | Clipzy"
   },
-  description: "Clipzy 是一款专业的在线剪贴板工具，提供端到端加密的临时文本和代码片段分享服务。支持链接阅后即焚、定时销毁，保护您的信息安全。免费使用，无需注册。",
+  description: "Clipzy 是一款专业的在线剪贴板工具，提供端到端加密的临时文本和代码片段分享服务。支持链接阅后即焚、定时销毁，保护您的信息安全。完全免费使用，无需注册。极简设计，安全可靠，是您最佳的网络剪贴板选择。",
   keywords: [
-    // 中文关键词
-    "在线剪贴板", "网络剪贴板", "临时剪贴板", "安全剪贴板", "加密剪贴板", 
+    // 核心关键词
+    "在线剪贴板", "网络剪贴板", "临时剪贴板", "安全剪贴板", "加密剪贴板",
+    "免费剪贴板", "极简剪贴板", "云剪贴板", "网页剪贴板", "在线粘贴板",
+    // 功能关键词
     "文本分享", "临时文本", "代码片段分享", "阅后即焚", "端到端加密",
-    "文本加密", "在线工具", "隐私保护", "安全分享", "文档分享",
-    "代码分享", "密文传输", "临时存储", "文件分享", "安全传输",
+    "文本加密", "隐私保护", "安全分享", "文档分享", "代码分享",
+    "密文传输", "临时存储", "跨设备分享", "无需注册", "免费使用",
+    // 竞品关键词
+    "网络剪切板", "在线剪切板", "即时剪贴板", "一块剪贴板", "智能粘贴板",
+    "数据暂存", "文件传输", "安全传输", "快速分享", "极速分享",
+    // 长尾关键词
+    "最好用的在线剪贴板", "安全的网络剪贴板", "免费在线文本分享",
+    "端到端加密剪贴板", "临时文本存储工具", "跨设备文本同步",
     // 英文关键词
     "clipzy", "online clipboard", "secure clipboard", "temporary clipboard", 
     "encrypted text sharing", "end-to-end encryption", "temporary text sharing",
     "code snippet sharing", "burn after reading", "secure text storage",
-    "privacy protection", "encrypted storage", "secure file transfer"
+    "privacy protection", "encrypted storage", "secure file transfer",
+    "free clipboard", "web clipboard", "instant clipboard"
   ],
   applicationName: "Clipzy",
   referrer: "origin-when-cross-origin",
