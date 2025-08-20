@@ -7,11 +7,6 @@ export const metadata: Metadata = {
     "历史记录", "本地存储", "加密记录", "隐私保护", "数据管理",
     "clipboard history", "encrypted storage", "local records", "privacy protection"
   ],
-  openGraph: {
-    title: "Clipzy 历史记录 - 本地加密记录管理",
-    description: "查看和管理您的加密历史记录，所有数据均在本地安全存储。",
-    type: "webpage",
-  },
   twitter: {
     card: "summary",
     title: "Clipzy 历史记录 - 本地加密记录管理",

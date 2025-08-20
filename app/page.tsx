@@ -290,7 +290,7 @@ export default memo(function Page() {
                                     在线剪贴板 网络剪贴板 临时剪贴板 安全剪贴板 免费剪贴板 文本分享 代码分享 端到端加密 阅后即焚 隐私保护
                                 </div>
                             </div>
-                            <div className="flex flex-col flex-1">
+                            <div className={`flex flex-col flex-1 ${isCreating ? 'processing-subtle' : ''}`}>
                                 <label htmlFor="main-input" className={`${themeClasses.textSecondary} text-sm mb-1 transition-colors duration-300`}>输入文本</label>
                                 <textarea
                                     id="main-input"
@@ -298,7 +298,7 @@ export default memo(function Page() {
                                     value={inputValue}
                                     onChange={e => setInputValue(e.target.value)}
                                     disabled={isCreating}
-                                    className={`flex-1 p-4 ${themeClasses.inputBg} placeholder-neutral-400 resize-none focus:outline-none border ${themeClasses.border} rounded-md ${isCreating ? 'opacity-50' : ''} transition-colors duration-300`}
+                                    className={`enhanced-input flex-1 p-4 ${themeClasses.inputBg} placeholder-neutral-400 resize-none focus:outline-none border ${themeClasses.border} rounded-md ${isCreating ? 'opacity-50' : ''} transition-colors duration-300`}
                                     autoFocus
                                     rows={Math.min(20, Math.max(4, (inputValue.match(/\n/g)?.length ?? 0) + 1))}
                                     style={{ fontFamily: 'inherit', fontSize: '1rem', minHeight: 120, maxHeight: 600, overflow: 'auto' }}
@@ -308,7 +308,7 @@ export default memo(function Page() {
 
                             <div className="mt-4">
                                 <label htmlFor="exp" className={`${themeClasses.textSecondary} text-sm mb-1 transition-colors duration-300`}>过期时间</label>
-                                <select id="exp" value={expiration} onChange={e => setExpiration(Number(e.target.value))} disabled={isCreating} className={`w-full p-2 border ${themeClasses.border} ${themeClasses.inputBg} rounded-md text-sm ${isCreating ? 'opacity-50' : ''} transition-colors duration-300`}>
+                                <select id="exp" value={expiration} onChange={e => setExpiration(Number(e.target.value))} disabled={isCreating} className={`enhanced-input w-full p-2 border ${themeClasses.border} ${themeClasses.inputBg} rounded-md text-sm ${isCreating ? 'opacity-50' : ''} transition-colors duration-300`}>
                                     <option value={3600}>1 小时 (上限 200 万字)</option>
                                     <option value={86400}>1 天 (上限 200 万字)</option>
                                     <option value={604800}>7 天 (上限 200 万字)</option>
@@ -319,8 +319,17 @@ export default memo(function Page() {
                             {error && <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`mt-4 p-3 rounded bg-red-50 dark:bg-red-900/20 ${themeClasses.error} transition-colors duration-300`}>{error}</motion.div>}
 
                             <div className="mt-6 flex justify-end">
-                                <button onClick={upload} disabled={!inputValue || isCreating} className={`px-6 py-2 ${themeClasses.btnPrimary} text-black dark:text-white ${(!inputValue || isCreating) ? 'opacity-50' : ''} transition-colors duration-300`}>
-                                    {isCreating ? <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }} className="w-4 h-4 border-2 border-t-transparent rounded-full inline-block mr-2" /> : '创建链接'}
+                                <button 
+                                    onClick={upload} 
+                                    disabled={!inputValue || isCreating} 
+                                    className={`enhanced-button px-6 py-2 ${themeClasses.btnPrimary} text-black dark:text-white ${(!inputValue || isCreating) ? 'opacity-50' : ''} rounded-md transition-colors duration-300`}
+                                >
+                                    {isCreating ? (
+                                        <>
+                                            <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }} className="w-4 h-4 border-2 border-t-transparent rounded-full inline-block mr-2" />
+                                            创建中...
+                                        </>
+                                    ) : '创建链接'}
                                 </button>
                             </div>
                         </motion.div>
@@ -335,10 +344,10 @@ export default memo(function Page() {
                             <div className="space-y-2">
                                 <label className={`${themeClasses.textSecondary} text-sm mb-2 block`}>分享链接</label>
                                 <div className={`flex flex-col md:flex-row border ${themeClasses.border} rounded-md overflow-hidden transition-colors duration-300`}>
-                                    <input readOnly value={shareUrl} onClick={e => e.currentTarget.select()} className={`w-full md:flex-1 px-4 py-3 focus:outline-none text-sm bg-transparent ${themeClasses.textPrimary} transition-colors duration-300`} />
+                                    <input readOnly value={shareUrl} onClick={e => e.currentTarget.select()} className={`enhanced-input w-full md:flex-1 px-4 py-3 focus:outline-none text-sm bg-transparent ${themeClasses.textPrimary} transition-colors duration-300`} />
                                     <div className="flex">
-                                        <button onClick={() => setIsModalOpen(true)} className={`flex-1 md:flex-initial px-4 py-3 ${themeClasses.btnSecondary} border-t md:border-t-0 md:border-l ${themeClasses.border} transition-colors duration-300`}>扫码</button>
-                                        <button onClick={() => copyUrl(shareUrl)} className={`flex-1 md:flex-initial px-4 py-3 ${urlCopied ? themeClasses.success : themeClasses.btnSecondary} border-l ${themeClasses.border} transition-colors duration-300`}>{urlCopied ? '已复制' : '复制'}</button>
+                                        <button onClick={() => setIsModalOpen(true)} className={`enhanced-button flex-1 md:flex-initial px-4 py-3 ${themeClasses.btnSecondary} border-t md:border-t-0 md:border-l ${themeClasses.border} transition-colors duration-300`}>扫码</button>
+                                        <button onClick={() => copyUrl(shareUrl)} className={`enhanced-button flex-1 md:flex-initial px-4 py-3 ${urlCopied ? `${themeClasses.success} success-flash` : themeClasses.btnSecondary} border-l ${themeClasses.border} transition-colors duration-300`}>{urlCopied ? '已复制' : '复制'}</button>
                                     </div>
                                 </div>
                             </div>
@@ -347,8 +356,8 @@ export default memo(function Page() {
                                     <span onClick={() => setShowRaw(s => !s)} className="ml-1 text-zinc-400 hover:underline cursor-pointer">{showRaw ? '(收起事项)' : '(注意事项)'}</span>
                                 </label>
                                 <div className={`flex flex-col md:flex-row border ${themeClasses.border} rounded-md overflow-hidden transition-colors duration-300`}>
-                                    <input readOnly value={rawUrl} onClick={e => e.currentTarget.select()} className={`w-full md:flex-1 px-4 py-3 focus:outline-none text-sm bg-transparent ${themeClasses.textPrimary} transition-colors duration-300`} />
-                                    <button onClick={() => copyRaw(rawUrl)} className={`px-4 py-3 ${rawCopied ? themeClasses.success : themeClasses.btnSecondary} border-t md:border-t-0 md:border-l ${themeClasses.border} transition-colors duration-300`}>{rawCopied ? '已复制' : '复制'}</button>
+                                    <input readOnly value={rawUrl} onClick={e => e.currentTarget.select()} className={`enhanced-input w-full md:flex-1 px-4 py-3 focus:outline-none text-sm bg-transparent ${themeClasses.textPrimary} transition-colors duration-300`} />
+                                    <button onClick={() => copyRaw(rawUrl)} className={`enhanced-button px-4 py-3 ${rawCopied ? `${themeClasses.success} success-flash` : themeClasses.btnSecondary} border-t md:border-t-0 md:border-l ${themeClasses.border} transition-colors duration-300`}>{rawCopied ? '已复制' : '复制'}</button>
                                 </div>
                                 <AnimatePresence>
                                     {showRaw && (
