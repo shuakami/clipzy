@@ -307,7 +307,14 @@ export default memo(function Page() {
                                 </div>
                             </div>
                             <div className={`flex flex-col flex-1 ${isCreating ? 'processing-subtle' : ''}`}>
-                                <label htmlFor="main-input" className={`${themeClasses.textSecondary} text-sm mb-1 transition-colors duration-300`}>输入文本</label>
+                                <label htmlFor="main-input" className={`${themeClasses.textSecondary} text-sm mb-1 transition-colors duration-300`}>
+                                    输入文本
+                                    {isLargeText && (
+                                        <span className="ml-2 text-xs text-amber-600 dark:text-amber-400">
+                                            (大文本模式 - 性能优化已启用)
+                                        </span>
+                                    )}
+                                </label>
                                 <textarea
                                     id="main-input"
                                     placeholder="在此处输入要分享的文本…"
