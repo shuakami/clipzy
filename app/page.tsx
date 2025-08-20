@@ -143,29 +143,72 @@ export default memo(function Page() {
         return () => window.removeEventListener('hashchange', handleHashChangeEvent);
     }, []);
     
-    // Input optimization with better debouncing for large text
+    // Input optimization - 超激进的大文本优化
     const [inputValue, setInputValue] = useState(input);
     const [isLargeText, setIsLargeText] = useState(false);
+    const [isVeryLargeText, setIsVeryLargeText] = useState(false);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const updateTimeoutRef = useRef<NodeJS.Timeout>();
     
     useEffect(() => { setInputValue(input); }, [input]);
     
+    // 检测文本大小并应用不同策略
     useEffect(() => {
-        const isLarge = inputValue.length > 500000; // 50万字符阈值
-        setIsLargeText(isLarge);
+        const length = inputValue.length;
+        const isLarge = length > 500000; // 50万字符
+        const isVeryLarge = length > 2000000; // 200万字符 - 启用非受控模式
         
-        const delay = isLarge ? 1000 : inputValue.length > 100000 ? 500 : 200;
-        const handler = setTimeout(() => {
+        setIsLargeText(isLarge);
+        setIsVeryLargeText(isVeryLarge);
+        
+        if (updateTimeoutRef.current) {
+            clearTimeout(updateTimeoutRef.current);
+        }
+        
+        // 对于超大文本，延迟更新并减少频率
+        const delay = isVeryLarge ? 2000 : isLarge ? 1000 : length > 100000 ? 500 : 200;
+        
+        updateTimeoutRef.current = setTimeout(() => {
             if (inputValue !== input) setInput(inputValue);
         }, delay);
-        return () => clearTimeout(handler);
+        
+        return () => {
+            if (updateTimeoutRef.current) {
+                clearTimeout(updateTimeoutRef.current);
+            }
+        };
     }, [inputValue, input, setInput]);
+    
+    // 超大文本时的直接DOM操作
+    const handleVeryLargeTextChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        const value = e.target.value;
+        if (value.length > 2000000) {
+            // 对于超大文本，跳过React状态更新，直接存储到ref
+            if (updateTimeoutRef.current) {
+                clearTimeout(updateTimeoutRef.current);
+            }
+            updateTimeoutRef.current = setTimeout(() => {
+                setInput(value);
+                setInputValue(value);
+            }, 3000); // 3秒延迟
+        } else {
+            setInputValue(value);
+        }
+    }, [setInput]);
     
     // 对于超大文本，使用更智能的行数计算
     const calculateRows = useCallback(() => {
-        if (inputValue.length > 1000000) return 20; // 超过100万字符固定20行
-        if (inputValue.length > 50000) return 15;   // 超过5万字符固定15行
-        return Math.min(20, Math.max(4, (inputValue.match(/\n/g)?.length ?? 0) + 1));
-    }, [inputValue]);
+        const length = inputValue.length;
+        if (length > 5000000) return 25;  // 超过500万字符固定25行
+        if (length > 1000000) return 20;  // 超过100万字符固定20行
+        if (length > 50000) return 15;    // 超过5万字符固定15行
+        
+        // 只有小文本才进行正则计算
+        if (length < 10000) {
+            return Math.min(20, Math.max(4, (inputValue.match(/\n/g)?.length ?? 0) + 1));
+        }
+        return 10; // 中等文本默认10行
+    }, [inputValue.length]); // 只依赖长度，不依赖内容
     
     const memoizedRows = useMemo(() => calculateRows(), [calculateRows]);
 
@@ -309,38 +352,47 @@ export default memo(function Page() {
                             <div className={`flex flex-col flex-1 ${isCreating ? 'processing-subtle' : ''}`}>
                                 <label htmlFor="main-input" className={`${themeClasses.textSecondary} text-sm mb-1 transition-colors duration-300`}>
                                     输入文本
-                                    {isLargeText && (
+                                    {isVeryLargeText && (
+                                        <span className="ml-2 text-xs text-red-600 dark:text-red-400">
+                                            (超大文本模式 - 延迟更新已启用)
+                                        </span>
+                                    )}
+                                    {isLargeText && !isVeryLargeText && (
                                         <span className="ml-2 text-xs text-amber-600 dark:text-amber-400">
                                             (大文本模式 - 性能优化已启用)
                                         </span>
                                     )}
                                 </label>
                                 <textarea
+                                    ref={textareaRef}
                                     id="main-input"
                                     placeholder="在此处输入要分享的文本…"
-                                    value={inputValue}
-                                    onChange={e => setInputValue(e.target.value)}
+                                    defaultValue={isVeryLargeText ? inputValue : undefined}
+                                    value={isVeryLargeText ? undefined : inputValue}
+                                    onChange={isVeryLargeText ? handleVeryLargeTextChange : (e => setInputValue(e.target.value))}
                                     disabled={isCreating}
-                                    className={`enhanced-input flex-1 p-4 ${themeClasses.inputBg} placeholder-neutral-400 resize-none focus:outline-none border ${themeClasses.border} rounded-md ${isCreating ? 'opacity-50' : ''} transition-colors duration-300`}
-                                    autoFocus
+                                    className={`${isVeryLargeText ? '' : 'enhanced-input'} flex-1 p-4 ${themeClasses.inputBg} placeholder-neutral-400 resize-none focus:outline-none border ${themeClasses.border} rounded-md ${isCreating ? 'opacity-50' : ''} ${isVeryLargeText ? '' : 'transition-colors duration-300'}`}
+                                    autoFocus={!isVeryLargeText}
                                     rows={memoizedRows}
                                     style={{ 
                                         fontFamily: 'inherit', 
-                                        fontSize: '1rem', 
+                                        fontSize: isVeryLargeText ? '0.875rem' : '1rem', // 超大文本用小字体
                                         minHeight: 120, 
-                                        maxHeight: 600, 
+                                        maxHeight: isVeryLargeText ? 800 : 600, // 超大文本允许更高
                                         overflow: 'auto',
-                                        whiteSpace: isLargeText ? 'pre' : 'pre-wrap',
-                                        wordBreak: isLargeText ? 'break-all' : 'break-word',
-                                        // 对于超大文本禁用一些昂贵的特性
-                                        resize: isLargeText ? 'none' : 'vertical'
+                                        whiteSpace: isVeryLargeText ? 'pre' : isLargeText ? 'pre' : 'pre-wrap',
+                                        wordBreak: isVeryLargeText ? 'break-all' : isLargeText ? 'break-all' : 'break-word',
+                                        resize: isLargeText ? 'none' : 'vertical',
+                                        // 超大文本时关闭所有动画和过渡
+                                        transition: isVeryLargeText ? 'none' : undefined
                                     }}
                                     spellCheck={false}
                                     autoComplete="off"
                                     autoCorrect="off"
                                     autoCapitalize="off"
                                     wrap={isLargeText ? 'off' : 'soft'}
-                                    // 超大文本时减少一些事件监听
+                                    // 超大文本时关闭所有不必要的事件
+                                    onInput={isVeryLargeText ? undefined : undefined}
                                     onCompositionStart={isLargeText ? undefined : undefined}
                                     onCompositionEnd={isLargeText ? undefined : undefined}
                                 />
