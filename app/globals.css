@@ -54,11 +54,6 @@
 
 .enhanced-button:hover {
   transform: translateY(-0.5px);
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
-}
-
-.dark .enhanced-button:hover {
-  box-shadow: 0 3px 12px rgba(255, 255, 255, 0.08);
 }
 
 .enhanced-button:active {
