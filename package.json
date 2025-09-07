@@ -15,7 +15,6 @@
     "@tailwindcss/typography": "^0.5.16",
     "@types/qrcode.react": "^3.0.0",
     "@types/react-syntax-highlighter": "^15.5.13",
-    "@types/simple-peer": "^9.11.8",
     "@upstash/redis": "^1.33.0",
     "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-react-refresh": "^0.4.7",
@@ -36,8 +35,6 @@
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
     "simple-peer": "^9.11.1",
-    "socket.io": "^4.8.1",
-    "socket.io-client": "^4.8.1",
     "typescript-eslint": "^7.16.1"
   },
   "devDependencies": {
