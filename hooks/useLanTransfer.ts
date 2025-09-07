@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+// @ts-ignore
 import Peer from 'simple-peer';
 
 // 设备信息接口
@@ -35,6 +36,8 @@ export interface TransferItem {
     fromDevice: string;
     toDevice: string;
     timestamp: number;
+    downloadUrl?: string;  // 用于手动下载的URL
+    fileName?: string;     // 原始文件名
 }
 
 // 连接状态
@@ -216,7 +219,7 @@ export function useLanTransfer() {
                         }
                     }
 
-                    // 创建文件并下载
+                    // 组装完整文件
                     const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
                     const fullFile = new Uint8Array(totalLength);
                     let offset = 0;
@@ -227,19 +230,18 @@ export function useLanTransfer() {
                     }
 
                     const blob = new Blob([fullFile]);
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = fileInfo.name;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
+                    const downloadUrl = URL.createObjectURL(blob);
 
-                    // 更新状态为完成
+                    // 更新状态为已接收，包含下载URL
                     setTransfers(prev => prev.map(t => 
                         t.id === message.id 
-                            ? { ...t, status: 'completed', progress: 100 }
+                            ? { 
+                                ...t, 
+                                status: 'completed', 
+                                progress: 100, 
+                                downloadUrl,
+                                fileName: fileInfo.name
+                            }
                             : t
                     ));
 
@@ -317,7 +319,7 @@ export function useLanTransfer() {
             }
         });
 
-        peer.on('signal', (data) => {
+        peer.on('signal', (data: any) => {
             console.log('发送信令:', data.type, '到设备:', deviceId);
             
             let signalType: 'offer' | 'answer' | 'ice-candidate';
@@ -347,12 +349,12 @@ export function useLanTransfer() {
             });
         });
 
-        peer.on('data', (data) => {
+        peer.on('data', (data: Buffer) => {
             console.log('收到P2P数据:', data.length, 'bytes from:', deviceId);
             handleIncomingData(data, deviceId);
         });
 
-        peer.on('error', (error) => {
+        peer.on('error', (error: Error) => {
             console.error(`❌ P2P连接错误 (${deviceId}):`, error);
             setPeers(prev => {
                 const newPeers = new Map(prev);
@@ -908,6 +910,29 @@ export function useLanTransfer() {
         };
     }, [stopPolling]);
 
+    // 手动下载文件
+    const downloadFile = useCallback((transfer: TransferItem) => {
+        if (transfer.downloadUrl && transfer.fileName) {
+            const a = document.createElement('a');
+            a.href = transfer.downloadUrl;
+            a.download = transfer.fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+    }, []);
+
+    // 清理下载URL（防止内存泄露）
+    const cleanupDownloadUrl = useCallback((transferId: string) => {
+        setTransfers(prev => prev.map(t => {
+            if (t.id === transferId && t.downloadUrl) {
+                URL.revokeObjectURL(t.downloadUrl);
+                return { ...t, downloadUrl: undefined };
+            }
+            return t;
+        }));
+    }, []);
+
     return {
         // 状态
         isConnected,
@@ -923,6 +948,8 @@ export function useLanTransfer() {
         leaveRoom,
         sendText,
         sendFile,
+        downloadFile,
+        cleanupDownloadUrl,
         
         // 计算属性
         canTransfer: peers.size > 0 && connectionInfo.status === 'connected',

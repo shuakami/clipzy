@@ -99,6 +99,14 @@ const DeviceIcon = ({ type }: { type?: string }) => (
     </svg>
 );
 
+const DownloadIcon = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7,10 12,15 17,10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+    </svg>
+);
+
 export default function LanPage() {
     const { resolvedTheme, setTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
@@ -121,7 +129,9 @@ export default function LanPage() {
         leaveRoom,
         sendText,
         sendFile,
-        canTransfer
+        canTransfer,
+        downloadFile,
+        cleanupDownloadUrl
     } = useLanTransfer();
 
     useEffect(() => {
@@ -543,21 +553,35 @@ export default function LanPage() {
                                                                     </span>
                                                                 </div>
                                                             ) : (
-                                                             <div className={`transition-colors duration-300 ${
-                                                                 transfer.status === 'completed' 
-                                                                     ? themeClasses.success 
-                                                                     : transfer.status === 'error' 
-                                                                     ? themeClasses.error 
-                                                                     : themeClasses.textSecondary
-                                                             }`}>
-                                                                 {transfer.status === 'completed' ? (
-                                                                     <CheckIcon />
-                                                                 ) : transfer.status === 'error' ? (
-                                                                     <XIcon />
+                                                             <>
+                                                                 {/* 已完成的文件且有下载URL - 显示下载按钮 */}
+                                                                 {transfer.status === 'completed' && transfer.type === 'file' && transfer.downloadUrl ? (
+                                                                     <button
+                                                                         onClick={() => downloadFile(transfer)}
+                                                                         className={`${themeClasses.btnPrimary} p-1.5 rounded hover:bg-opacity-80 transition-colors duration-300`}
+                                                                         title="下载文件"
+                                                                     >
+                                                                         <DownloadIcon />
+                                                                     </button>
                                                                  ) : (
-                                                                     <ClockIcon />
+                                                                     /* 其他状态显示图标 */
+                                                                     <div className={`transition-colors duration-300 ${
+                                                                         transfer.status === 'completed' 
+                                                                             ? themeClasses.success 
+                                                                             : transfer.status === 'error' 
+                                                                             ? themeClasses.error 
+                                                                             : themeClasses.textSecondary
+                                                                     }`}>
+                                                                         {transfer.status === 'completed' ? (
+                                                                             <CheckIcon />
+                                                                         ) : transfer.status === 'error' ? (
+                                                                             <XIcon />
+                                                                         ) : (
+                                                                             <ClockIcon />
+                                                                         )}
+                                                                     </div>
                                                                  )}
-                                                             </div>
+                                                             </>
                                                          )}
                                                      </div>
                                                     </div>
