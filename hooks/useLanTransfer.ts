@@ -313,9 +313,36 @@ export function useLanTransfer() {
             trickle: false,
             config: {
                 iceServers: [
+                    // Google STUN 服务器
                     { urls: 'stun:stun.l.google.com:19302' },
-                    { urls: 'stun:stun1.l.google.com:19302' }
-                ]
+                    { urls: 'stun:stun1.l.google.com:19302' },
+                    { urls: 'stun:stun2.l.google.com:19302' },
+                    { urls: 'stun:stun3.l.google.com:19302' },
+                    { urls: 'stun:stun4.l.google.com:19302' },
+                    
+                    // 其他公共 STUN 服务器
+                    { urls: 'stun:stun.services.mozilla.com' },
+                    { urls: 'stun:stunserver.org' },
+                    
+                    // 免费 TURN 服务器 (有限带宽)
+                    { 
+                        urls: 'turn:openrelay.metered.ca:80',
+                        username: 'openrelayproject',
+                        credential: 'openrelayproject'
+                    },
+                    {
+                        urls: 'turn:openrelay.metered.ca:443',
+                        username: 'openrelayproject', 
+                        credential: 'openrelayproject'
+                    },
+                    {
+                        urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+                        username: 'openrelayproject',
+                        credential: 'openrelayproject'
+                    }
+                ],
+                iceCandidatePoolSize: 10,
+                iceTransportPolicy: 'all'
             }
         });
 
@@ -356,12 +383,64 @@ export function useLanTransfer() {
 
         peer.on('error', (error: Error) => {
             console.error(`❌ P2P连接错误 (${deviceId}):`, error);
+            
+            // 确定错误类型并提供相应的处理
+            let errorMessage = '连接失败';
+            let shouldRetry = false;
+            
+            if (error.message.includes('Connection failed')) {
+                errorMessage = '网络连接失败，可能是防火墙或NAT问题';
+                shouldRetry = true;
+            } else if (error.message.includes('ICE connection failed')) {
+                errorMessage = 'ICE连接失败，网络环境不支持P2P连接';
+                shouldRetry = true;
+            } else if (error.message.includes('Connection refused')) {
+                errorMessage = '连接被拒绝，对方设备可能不可用';
+                shouldRetry = false;
+            } else if (error.message.includes('timeout')) {
+                errorMessage = '连接超时，网络可能不稳定';
+                shouldRetry = true;
+            }
+            
+            // 更新连接状态显示错误信息
+            setConnectionInfo(prev => ({
+                ...prev,
+                status: 'error',
+                error: errorMessage,
+                connectedDevices: prev.connectedDevices.filter(id => id !== deviceId)
+            }));
+            
+            // 从peers列表中移除失败的连接
             setPeers(prev => {
                 const newPeers = new Map(prev);
                 newPeers.delete(deviceId);
                 console.log('移除失败的P2P连接:', deviceId);
                 return newPeers;
             });
+            
+            // 如果应该重试且重试次数未超限，则延迟重试
+            if (shouldRetry) {
+                const retryKey = `retry_${deviceId}`;
+                const retryCount = (peer as any)[retryKey] || 0;
+                
+                if (retryCount < 2) { // 最多重试2次
+                    console.log(`🔄 将在3秒后重试连接到设备: ${deviceId} (第${retryCount + 1}次重试)`);
+                    setTimeout(() => {
+                        try {
+                            const currentDeviceId = deviceIdRef.current || currentDevice?.id;
+                            const shouldBeInitiator = (currentDeviceId || '') < deviceId;
+                            const newPeer = createPeerConnection(deviceId, shouldBeInitiator, roomId, fromDeviceId);
+                            if (newPeer) {
+                                (newPeer as any)[retryKey] = retryCount + 1;
+                            }
+                        } catch (retryError) {
+                            console.error(`重试连接失败:`, retryError);
+                        }
+                    }, 3000);
+                } else {
+                    console.log(`❌ 设备 ${deviceId} 重试次数已达上限，停止重试`);
+                }
+            }
         });
 
         peer.on('close', () => {
