@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { useSyntaxHighlighting, detectLanguage } from '../hooks/useSyntaxHighlighting';
 import { QRCodeModal } from '../components/QRCodeModal';
 import { useClipLogic, LoadingState, LOADING_MESSAGES } from '../hooks/useClipLogic';
+import { AnnouncementBar } from '../components/AnnouncementBar';
 
 // Zero-dependency SVG icons
 const SunIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -63,13 +64,8 @@ export default memo(function Page() {
     const [mounted, setMounted] = useState(false);
     const syntaxStyle = useSyntaxHighlighting(resolvedTheme === 'dark');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [showTermsModal, setShowTermsModal] = useState(false);
 
-    const [showBanner, setShowBanner] = useState(() => {
-        if (typeof window !== 'undefined') {
-            return localStorage.getItem('clipzy_limit_banner_closed') !== '1';
-        }
-        return true;
-    });
 
     const {
         input, setInput,
@@ -92,28 +88,31 @@ export default memo(function Page() {
         setMounted(true);
     }, []);
 
-    const handleCloseBanner = useCallback(() => {
-        setShowBanner(false);
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('clipzy_limit_banner_closed', '1');
-        }
-    }, []);
 
-    useEffect(() => {
-        if (!showBanner) return;
-        const timer = setTimeout(() => {
-            setShowBanner(false);
-            if (typeof window !== 'undefined') {
-                localStorage.setItem('clipzy_limit_banner_closed', '1');
-            }
-        }, 15000);
-        return () => clearTimeout(timer);
-    }, [showBanner]);
 
     const handleFullReset = useCallback(() => {
         logicReset();
         history.replaceState(null, '', location.pathname + location.search);
     }, [logicReset]);
+
+    const handleConfirmClipzyTerms = useCallback(() => {
+        localStorage.setItem('clipzy-terms-accepted', 'true');
+        setShowTermsModal(false);
+        upload();
+    }, [upload]);
+
+    const handleCancelClipzyUpload = useCallback(() => {
+        setShowTermsModal(false);
+    }, []);
+
+    const handleUploadWithTermsCheck = useCallback(() => {
+        const hasAcceptedTerms = localStorage.getItem('clipzy-terms-accepted') === 'true';
+        if (!hasAcceptedTerms && input.trim()) {
+            setShowTermsModal(true);
+        } else {
+            upload();
+        }
+    }, [upload, input]);
 
     const logicResetRef = useRef(logicReset);
     useEffect(() => { logicResetRef.current = logicReset; }, [logicReset]);
@@ -225,7 +224,7 @@ export default memo(function Page() {
         border: 'border-neutral-200 dark:border-zinc-700',
         inputBg: 'bg-white dark:bg-zinc-900',
         error: 'text-red-500 dark:text-red-400',
-        success: 'text-blue-500',
+        success: 'text-green-600 dark:text-green-400',
     };
 
     if (!mounted) {
@@ -246,6 +245,10 @@ export default memo(function Page() {
                         onClick={handleFullReset}
                         priority
                     />
+                    <Link href="/image" className={`hidden md:flex items-center gap-2 ${themeClasses.textSecondary} hover:text-opacity-80 transition-colors duration-300`}>
+                        <span>图床</span>
+                        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-pink-100 text-pink-800 dark:bg-pink-900/50 dark:text-pink-300">New</span>
+                    </Link>
                     <Link href="/lan" className={`hidden md:flex items-center gap-2 ${themeClasses.textSecondary} hover:text-opacity-80 transition-colors duration-300`}>
                         <span>局域网快传</span>
                         <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-teal-100 text-teal-800 dark:bg-teal-900/50 dark:text-teal-300">Beta</span>
@@ -255,29 +258,6 @@ export default memo(function Page() {
                     {dark ? <SunIcon className="w-5 h-5" /> : <MoonIcon className="w-5 h-5" />}
                 </button>
             </header>
-
-            {/* Banner */}
-            <AnimatePresence>
-                {showBanner && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -8 }}
-                        transition={{ duration: 0.25, ease: 'easeOut' }}
-                        className="max-w-2xl mx-auto mt-2 mb-4 px-5 py-2.5 rounded-2xl flex items-center gap-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 shadow-sm"
-                        style={{ zIndex: 20 }}
-                    >
-                        <span className="flex-1 text-sm text-zinc-800 dark:text-zinc-100 truncate">临时剪切板单次上限已提升至 <b className="font-medium text-amber-700 dark:text-amber-400">200万字/8MB</b>，欢迎体验。</span>
-                        <button
-                            onClick={handleCloseBanner}
-                            className="ml-1 p-1.5 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-500 dark:text-zinc-400 focus:outline-none"
-                            aria-label="关闭横幅"
-                        >
-                            <svg width="16" height="16" fill="none" viewBox="0 0 20 20"><path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M6 6l8 8M6 14L14 6"/></svg>
-                        </button>
-                    </motion.div>
-                )}
-            </AnimatePresence>
 
             {/* Main */}
             <main className="flex-1 flex flex-col px-8 pt-6 pb-12 max-w-4xl mx-auto w-full">
@@ -412,7 +392,7 @@ export default memo(function Page() {
 
                             <div className="mt-6 flex justify-end">
                                 <button 
-                                    onClick={upload} 
+                                    onClick={handleUploadWithTermsCheck} 
                                     disabled={!inputValue || isCreating} 
                                     className={`enhanced-button px-6 py-2 ${themeClasses.btnPrimary} text-black dark:text-white ${(!inputValue || isCreating) ? 'opacity-50' : ''} rounded-md transition-colors duration-300`}
                                 >
@@ -478,6 +458,72 @@ export default memo(function Page() {
                     )}
                 </AnimatePresence>
             </main>
+
+            {/* Clipzy Terms Modal */}
+            <AnimatePresence>
+                {showTermsModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className={`fixed inset-0 ${dark ? 'bg-black/50' : 'bg-white/50'} backdrop-blur-sm flex items-center justify-center z-50 p-4`}
+                        onClick={handleCancelClipzyUpload}
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            transition={{ 
+                                duration: 0.4, 
+                                ease: [0.4, 0, 0.2, 1],
+                                type: "spring",
+                                stiffness: 300,
+                                damping: 30
+                            }}
+                            className={`
+                                ${themeClasses.inputBg} rounded-2xl p-8 max-w-2xl w-full max-h-[85vh] overflow-y-auto 
+                                border ${themeClasses.border} 
+                                shadow-2xl shadow-black/20 dark:shadow-black/40
+                                backdrop-blur-xl
+                            `}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <h2 className={`${themeClasses.textPrimary} text-xl font-semibold mb-6`}>
+                                重要声明
+                            </h2>
+                            
+                            <div className={`${themeClasses.textSecondary} text-sm space-y-4 mb-8`}>
+                                <p>
+                                    虽然说我们不会审查也无法审查用户的内容（由我们的基本安全性决定），但你不能用我们的服务传播包括反动、暴力、色情、违法、及侵权内容。我们有义务配合有关部门的调查工作。
+                                </p>
+                                
+                                <p>
+                                    国家秘密受法律保护。一切国家机关、武装力量、政党、社会团体、企事业单位和公民都有保守国家秘密的义务。任何危害国家秘密安全的行为，都必须受到法律追究。请严格遵守保密法律法规，严禁在互联网上存储、处理、传输、发布涉密信息。
+                                </p>
+                                
+                                <p>
+                                    Clipzy 是一个安全的端到端加密文本分享服务，我们致力于保护您的隐私。使用本服务即表示您同意遵守相关法律法规和服务条款。
+                                </p>
+                            </div>
+
+                            <div className="flex justify-end space-x-4">
+                                <button
+                                    onClick={handleCancelClipzyUpload}
+                                    className={`enhanced-button px-6 py-2 ${themeClasses.btnSecondary} transition-colors duration-300`}
+                                >
+                                    取消
+                                </button>
+                                <button
+                                    onClick={handleConfirmClipzyTerms}
+                                    className={`enhanced-button px-6 py-2 ${themeClasses.btnPrimary} text-black dark:text-white transition-colors duration-300`}
+                                >
+                                    同意并继续
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <Footer />
             <QRCodeModal

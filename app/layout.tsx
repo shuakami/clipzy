@@ -204,7 +204,9 @@ export default function RootLayout({
         <link rel="apple-touch-icon" sizes="180x180" href="/assets/clipzy.png" />
       </head>
       <body className={`${GeistSans.className} transition-colors duration-300 ease-in-out`}>
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );

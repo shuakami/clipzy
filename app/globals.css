@@ -76,3 +76,56 @@
 .success-flash {
   animation: success-flash 0.6s ease-out;
 }
+
+/* 骨架屏动画 */
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.dark .skeleton-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background-size: 200px 100%;
+}
+
+/* 隐藏滚动条但保持滚动功能 */
+* {
+  /* Firefox */
+  scrollbar-width: none;
+}
+
+*::-webkit-scrollbar {
+  /* Webkit browsers (Chrome, Safari, Edge) */
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+/* 确保页面主体也隐藏滚动条 */
+html, body {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+}
