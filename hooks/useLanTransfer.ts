@@ -460,6 +460,39 @@ export function useLanTransfer() {
             });
         });
 
+        // 添加连接超时机制
+        const connectionTimeout = setTimeout(() => {
+            if (!peer.connected && !peer.destroyed) {
+                console.log(`⏰ P2P连接超时: ${deviceId}`);
+                peer.destroy();
+                
+                setConnectionInfo(prev => ({
+                    ...prev,
+                    status: 'error',
+                    error: '连接超时，请检查网络连接',
+                    connectedDevices: prev.connectedDevices.filter(id => id !== deviceId)
+                }));
+            }
+        }, 30000); // 30秒超时
+        
+        // 修改连接成功处理，添加超时清除
+        peer.removeAllListeners('connect');
+        peer.on('connect', () => {
+            clearTimeout(connectionTimeout);
+            console.log(`✅ P2P连接已建立: ${deviceId}`);
+            setConnectionInfo(prev => {
+                const newConnectedDevices = [...prev.connectedDevices.filter(id => id !== deviceId), deviceId];
+                console.log('更新连接设备列表:', newConnectedDevices);
+                return {
+                    ...prev,
+                    connectedDevices: newConnectedDevices,
+                    status: 'connected',
+                    error: undefined // 清除之前的错误
+                };
+            });
+        });
+
+        peersRef.current.set(deviceId, peer);
         setPeers(prev => new Map(prev).set(deviceId, peer));
         return peer;
     }, [sendSignalMessage, handleIncomingData]);
