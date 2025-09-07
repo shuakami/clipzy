@@ -304,7 +304,7 @@ export default memo(function ImagePage() {
                                         <img 
                                             src={imageUrl.startsWith('http') ? imageUrl : `https://uapis.cn${imageUrl}`} 
                                             alt="上传的图片" 
-                                            className={`max-w-full max-h-96 object-contain rounded-md shadow-sm transition-opacity duration-300 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
+                                            className={`max-w-full max-h-96 object-contain rounded-md transition-opacity duration-300 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
                                             onLoad={() => setImageLoading(false)}
                                             onLoadStart={() => setImageLoading(true)}
                                             onError={(e) => {
